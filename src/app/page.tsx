@@ -1,7 +1,8 @@
+import TopBar from "@/component/TopBar"
 export default function Home() {
   return (
     <main className="text-black">
-      <p>Login Page</p>
+      <p>Hello Washout</p>
     </main>
   )
 }

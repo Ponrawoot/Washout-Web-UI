@@ -1,4 +1,4 @@
-import Navbar from "../navbar";
+// import Navbar from "../navbar";
 
 function Branch(props) {
   const { branchId, branchName } = props;
@@ -23,7 +23,7 @@ function Branch(props) {
 export default function BranchManagement() {
   return (
     <main className="bg-white">
-      <Navbar username="Bass" />
+      {/* <Navbar username="Bass" /> */}
       <div className="container p-10">
         <h1 className="text-lg">ระบบจัดการสาขา</h1>
         <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-4">
