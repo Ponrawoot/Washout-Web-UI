@@ -1,4 +1,4 @@
-export default function BranchManagement() {
+export default function StaffManagement() {
     return (
       <div className="text-black">
       </div>
