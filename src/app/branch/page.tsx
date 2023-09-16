@@ -1,5 +1,25 @@
 import Navbar from "../navbar";
 
+function Branch(props) {
+  const { branchId, branchName } = props;
+  return (
+    <tr className="border border-gray-300">
+      <td className="border border-gray-300 px-4 py-2 text-center">{branchId}</td>
+      <td className="border border-gray-300 px-4 py-2 text-center">{branchName}</td>
+      <td className="border border-gray-300 px-4 py-2 text-center">
+        <button className="bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-2 rounded">
+          แก้ไข
+        </button>
+      </td>
+      <td className="border border-gray-300 px-4 py-2 text-center">
+        <button className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded">
+          ลบ
+        </button>
+      </td>
+    </tr>
+  );
+}
+
 export default function BranchManagement() {
   return (
     <main className="bg-white">
@@ -19,48 +39,10 @@ export default function BranchManagement() {
             </tr>
           </thead>
           <tbody>
-            <tr className="border border-gray-300">
-              <td className="border border-gray-300 px-4 py-2 text-center">202001</td>
-              <td className="border border-gray-300 px-4 py-2 text-center">บรรทัดทอง</td>
-              <td className="border border-gray-300 px-4 py-2 text-center">
-                <button className="bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-2 rounded">
-                  แก้ไข
-                </button>
-              </td>
-              <td className="border border-gray-300 px-4 py-2 text-center">
-                <button className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded">
-                  ลบ
-                </button>
-              </td>
-            </tr>
-            <tr className="border border-gray-300">
-              <td className="border border-gray-300 px-4 py-2 text-center">202002</td>
-              <td className="border border-gray-300 px-4 py-2 text-center">สามย่าน</td>
-              <td className="border border-gray-300 px-4 py-2 text-center">
-                <button className="bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-2 rounded">
-                  แก้ไข
-                </button>
-              </td>
-              <td className="border border-gray-300 px-4 py-2 text-center">
-                <button className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded">
-                  ลบ
-                </button>
-              </td>
-            </tr>
-            <tr className="border border-gray-300">
-              <td className="border border-gray-300 px-4 py-2 text-center">202003</td>
-              <td className="border border-gray-300 px-4 py-2 text-center">สยาม</td>
-              <td className="border border-gray-300 px-4 py-2 text-center">
-                <button className="bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-2 rounded">
-                  แก้ไข
-                </button>
-              </td>
-              <td className="border border-gray-300 px-4 py-2 text-center">
-                <button className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded">
-                  ลบ
-                </button>
-              </td>
-            </tr>
+            <Branch branchId="202001" branchName="สยาม" />
+            <Branch branchId="202002" branchName="พระราม 2" />
+            <Branch branchId="202003" branchName="อโศก" />
+            <Branch branchId="202004" branchName="บางนา" />
           </tbody>
         </table>
       </div>
