@@ -1,6 +1,36 @@
+import React from "react";
 import Navbar from "../navbar";
 
+// Function component to generate a single row
+function Branch({ BranchID, BranchName }) {
+  return (
+    <tr className="border border-gray-300">
+      <td className="border border-gray-300 px-4 py-2 text-center">{BranchID}</td>
+      <td className="border border-gray-300 px-4 py-2 text-center">{BranchName}</td>
+      <td className="border border-gray-300 px-4 py-2 text-center">
+        <button className="bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-2 rounded">
+          แก้ไข
+        </button>
+      </td>
+      <td className="border border-gray-300 px-4 py-2 text-center">
+        <button className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded">
+          ลบ
+        </button>
+      </td>
+    </tr>
+  );
+}
+
 export default function BranchManagement() {
+
+  const branches = [
+    { BranchID: "202001", BranchName: "บรรทัดทอง" },
+    { BranchID: "202002", BranchName: "สามย่าน" },
+    { BranchID: "202003", BranchName: "สยาม" },
+    { BranchID: "202004", BranchName: "บางนา" },
+
+  ];
+
   return (
     <main className="bg-white">
       <Navbar username="Bass" />
@@ -19,48 +49,13 @@ export default function BranchManagement() {
             </tr>
           </thead>
           <tbody>
-            <tr className="border border-gray-300">
-              <td className="border border-gray-300 px-4 py-2 text-center">202001</td>
-              <td className="border border-gray-300 px-4 py-2 text-center">บรรทัดทอง</td>
-              <td className="border border-gray-300 px-4 py-2 text-center">
-                <button className="bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-2 rounded">
-                  แก้ไข
-                </button>
-              </td>
-              <td className="border border-gray-300 px-4 py-2 text-center">
-                <button className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded">
-                  ลบ
-                </button>
-              </td>
-            </tr>
-            <tr className="border border-gray-300">
-              <td className="border border-gray-300 px-4 py-2 text-center">202002</td>
-              <td className="border border-gray-300 px-4 py-2 text-center">สามย่าน</td>
-              <td className="border border-gray-300 px-4 py-2 text-center">
-                <button className="bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-2 rounded">
-                  แก้ไข
-                </button>
-              </td>
-              <td className="border border-gray-300 px-4 py-2 text-center">
-                <button className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded">
-                  ลบ
-                </button>
-              </td>
-            </tr>
-            <tr className="border border-gray-300">
-              <td className="border border-gray-300 px-4 py-2 text-center">202003</td>
-              <td className="border border-gray-300 px-4 py-2 text-center">สยาม</td>
-              <td className="border border-gray-300 px-4 py-2 text-center">
-                <button className="bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-2 rounded">
-                  แก้ไข
-                </button>
-              </td>
-              <td className="border border-gray-300 px-4 py-2 text-center">
-                <button className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded">
-                  ลบ
-                </button>
-              </td>
-            </tr>
+            {branches.map((branch, index) => (
+              <Branch
+                key={index}
+                BranchID={branch.BranchID}
+                BranchName={branch.BranchName}
+              />
+            ))}
           </tbody>
         </table>
       </div>
