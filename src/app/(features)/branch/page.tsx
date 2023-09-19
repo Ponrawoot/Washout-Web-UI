@@ -1,6 +1,6 @@
 // import Navbar from "../navbar";
 
-function Branch(props) {
+function Branch(props: { branchId: any; branchName: any; }) {
   const { branchId, branchName } = props;
   return (
     <tr className="border border-gray-300">
