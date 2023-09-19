@@ -1,6 +1,6 @@
 export default function MachineManagement() {
     return (
-      <div className="text-black">
+      <div>
         <p>Machine Page</p>
       </div>
     )
