@@ -1,9 +1,9 @@
-import TopBar from '@/component/TopBar';
+import AdminTopBar from '@/component/AdminTopBar';
 
 export default function ReservationLayout({children} : {children:React.ReactNode}) {
     return (
         <div >
-            <TopBar/>
+            <AdminTopBar/>
             {children}
         </div>
     );

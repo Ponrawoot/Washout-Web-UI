@@ -1,3 +1,4 @@
+
 export default function MachineManagement() {
   return (
     <div className="text-black py-[80px] px-[50px] space-y-[20px]">

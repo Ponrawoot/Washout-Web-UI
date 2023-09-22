@@ -1,4 +1,4 @@
-import TopBar from "@/component/TopBar"
+import TopBar from "@/component/AdminTopBar"
 export default function Home() {
   return (
     <main className="text-black">
