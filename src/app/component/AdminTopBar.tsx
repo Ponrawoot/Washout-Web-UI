@@ -4,12 +4,10 @@ import LocalConvenienceStoreIcon from "@mui/icons-material/LocalConvenienceStore
 import LocalLaundryServiceIcon from "@mui/icons-material/LocalLaundryService";
 import ManageAccountsIcon from "@mui/icons-material/ManageAccounts";
 
-export default function Page() {
+export default function AdminTopBar() {
   const router = useRouter();
-  return ( 
-    <main>
-      {/* <p>Test Bar</p> */}
-      <nav className="bg-primary-blue p-4">
+  return (
+    <div className="bg-primary-blue p-4">
       <div className="container mx-auto">
         <div className="flex justify-between items-center">
           <div className="text-white font-bold text-xl">
@@ -45,8 +43,6 @@ export default function Page() {
           </ul>
         </div>
       </div>
-    </nav>
-    </main>
-
+    </div>
   );
 }

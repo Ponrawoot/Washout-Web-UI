@@ -1,7 +1,16 @@
-export default function FeaturesLayout({children} : {children:React.ReactNode}) {
-    return (
-        <div>
-            {children}
-        </div>
-    );
+
+import AdminTopBar from "../component/AdminTopBar";
+export default function FeaturesLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="en">
+      <body>
+        <AdminTopBar/>
+        {children}
+      </body>
+    </html>
+  );
 }
