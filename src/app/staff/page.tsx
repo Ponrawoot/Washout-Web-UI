@@ -5,7 +5,7 @@ import Navbar from "../navbar";
 function StaffManagement() {
   const [staff, setStaff] = useState([
     { EmployeeID: "1001", Name: "ณภัทร ดรุนัยธร", Branch: "บรรทัดทอง" },
-    { EmployeeID: "1002", Name: "พลวุฒิ ขำโขนงาม ", Branch: "สามย่าน" },
+    { EmployeeID: "1002", Name: "พลวุฒิ ขำโขนงาม", Branch: "สามย่าน" },
     { EmployeeID: "1003", Name: "กาญจนี สถิตรังสีวงศ", Branch: "สยาม" },
     { EmployeeID: "1004", Name: "ดิสรณ์ บุตรโส", Branch: "บางนา" },
     { EmployeeID: "1005", Name: "ปริชญา ศิรินันท์อนุกูล", Branch: "บางขุนเทียน" },
@@ -16,6 +16,8 @@ function StaffManagement() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [staffToEdit, setStaffToEdit] = useState(null);
   const [staffToDelete, setStaffToDelete] = useState(null);
+
+  const [searchQuery, setSearchQuery] = useState("");
 
   const handleDeleteStaff = (employeeID) => {
     const updatedStaff = staff.filter((employee) => employee.EmployeeID !== employeeID);
@@ -52,12 +54,22 @@ function StaffManagement() {
       <Navbar username="Bass" />
       <div className="container p-10">
         <h1 className="text-lg">ระบบจัดการพนักงาน</h1>
-        <button
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-4"
-          onClick={() => setShowAddModal(true)}
-        >
-          เพิ่มพนักงาน
-        </button>
+        <div className="flex justify-between items-center">
+            <button
+              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-4"
+              onClick={() => setShowAddModal(true)}
+            >
+            เพิ่มพนักงาน
+            </button>
+
+            <input
+              className="border border-gray-300 p-2 rounded mt-4"
+              type="text"
+              placeholder="ค้นหา ประจำที่สาขา"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+        </div>
         <table className="mt-4 w-full border-collapse border border-gray-300">
           <thead>
             <tr className="bg-gray-200">
@@ -69,29 +81,32 @@ function StaffManagement() {
             </tr>
           </thead>
           <tbody>
-            {staff.map((employee) => (
-              <tr key={employee.EmployeeID} className="border border-gray-300">
-                <td className="border border-gray-300 px-4 py-2 text-center">{employee.EmployeeID}</td>
-                <td className="border border-gray-300 px-4 py-2 text-center">{employee.Name}</td>
-                <td className="border border-gray-300 px-4 py-2 text-center">{employee.Branch}</td>
-                <td className="border border-gray-300 px-4 py-2 text-center">
-                  <button
-                    className="bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-2 rounded"
-                    onClick={() => handleEditClick(employee)}
-                  >
-                    แก้ไข
-                  </button>
-                </td>
-                <td className="border border-gray-300 px-4 py-2 text-center">
-                  <button
-                    className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded"
-                    onClick={() => handleDeleteClick(employee)}
-                  >
-                    ลบ
-                  </button>
-                </td>
-              </tr>
-            ))}
+            {staff
+              .filter((employee) =>
+                employee.Branch.includes(searchQuery))
+              .map((employee) => (
+                <tr key={employee.EmployeeID} className="border border-gray-300">
+                  <td className="border border-gray-300 px-4 py-2 text-center">{employee.EmployeeID}</td>
+                  <td className="border border-gray-300 px-4 py-2 text-center">{employee.Name}</td>
+                  <td className="border border-gray-300 px-4 py-2 text-center">{employee.Branch}</td>
+                  <td className="border border-gray-300 px-4 py-2 text-center">
+                    <button
+                      className="bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-2 rounded"
+                      onClick={() => handleEditClick(employee)}
+                    >
+                      แก้ไข
+                    </button>
+                  </td>
+                  <td className="border border-gray-300 px-4 py-2 text-center">
+                    <button
+                      className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded"
+                      onClick={() => handleDeleteClick(employee)}
+                    >
+                      ลบ
+                    </button>
+                  </td>
+                </tr>
+              ))}
           </tbody>
         </table>
       </div>
@@ -124,7 +139,6 @@ function StaffInputModal({ onSubmit, onClose }) {
   const [employeeBranch, setEmployeeBranch] = useState("");
 
   const handleSubmit = () => {
-    // Generate a unique employee ID
     const uniqueEmployeeID = new Date().getTime().toString();
     onSubmit({ EmployeeID: uniqueEmployeeID, Name: employeeName, Branch: employeeBranch });
     setEmployeeName("");
@@ -258,18 +272,10 @@ function DeleteStaffModal({ staff, onDelete, onClose }) {
           </button>
         </div>
         <div className="modal-body">
-          <p>
-            คุณต้องการลบพนักงานดังต่อไปนี้หรือไม่?
-          </p>
-          <p className="font-semibold">
-            รหัสพนักงาน: {staff.EmployeeID}
-          </p>
-          <p className="font-semibold">
-            ชื่อนามสกุล: {staff.Name}
-          </p>
-          <p className="font-semibold">
-            ประจำที่สาขา: {staff.Branch}
-          </p>
+          <p>คุณต้องการลบพนักงานดังต่อไปนี้หรือไม่?</p>
+          <p className="font-semibold">รหัสพนักงาน: {staff.EmployeeID}</p>
+          <p className="font-semibold">ชื่อนามสกุล: {staff.Name}</p>
+          <p className="font-semibold">ประจำที่สาขา: {staff.Branch}</p>
         </div>
         <div className="modal-footer">
           <button
