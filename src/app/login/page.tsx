@@ -14,6 +14,8 @@ export default function Home() {
   const handleLogin = () => {
     if (username === 'Admin' && password === '1234') {
       router.push('/branch');
+    } else if (username === 'Staff01' && password === '1234') {
+      router.push('/locker');
     } else {
       alert('Invalid username or password');
     }
