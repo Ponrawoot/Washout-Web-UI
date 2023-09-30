@@ -8,7 +8,7 @@ export default function StaffTopBar() {
             </div>
           <ul className="flex space-x-4 items-center">
           <li>
-              <p>อรทัย</p>
+              <p>Staff01</p>
             </li>
           <li>
                 <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
