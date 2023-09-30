@@ -1,52 +1,37 @@
-"use client";
-import { useRouter } from "next/navigation";
-import LocalConvenienceStoreIcon from "@mui/icons-material/LocalConvenienceStore";
-import LocalLaundryServiceIcon from "@mui/icons-material/LocalLaundryService";
-import ManageAccountsIcon from "@mui/icons-material/ManageAccounts";
+import styles from './page.module.css';
+import PersonIcon from '@mui/icons-material/Person';
+import LockIcon from '@mui/icons-material/Lock';
+import Button from '@mui/material/Button';
 
-export default function Page() {
-  const router = useRouter();
-  return ( 
-    <main>
-      {/* <p>Test Bar</p> */}
-      <nav className="bg-primary-blue p-4">
-      <div className="container mx-auto">
-        <div className="flex justify-between items-center">
-          <div className="text-white font-bold text-xl">
-            <LocalConvenienceStoreIcon
-              className="w-10 h-10 mr-4 ml-4 hover:text-gray-600"
-              onClick={(e) => {
-                e.stopPropagation();
-                router.replace("/branch");
-              }}
-            />
-            <ManageAccountsIcon
-              className="w-10 h-10 mr-4 ml-4 hover:text-gray-600"
-              onClick={(e) => {
-                e.stopPropagation();
-                router.replace("/staff");
-              }}
-            />
-            <LocalLaundryServiceIcon
-              className="w-10 h-10 ml-4 hover:text-gray-600"
-              onClick={(e) => {
-                e.stopPropagation();
-                router.replace("/machine");
-              }}
-            />
-          </div>
-          <ul className="flex space-x-4 items-center">
-            <li>
-              <p>ผู้ดูแลระบบ</p>
-            </li>
-            <li>
-              <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center"></div>
-            </li>
-          </ul>
+export default function Home() {
+  return (
+    <main className={styles.main}>
+
+      <div className={styles.container}>
+        <div className={styles.header}>
+            <p>Login</p>
         </div>
-      </div>
-    </nav>
-    </main>
+        
+        <div className={styles.inputs}>
+            <div className={styles.input}>
+              < PersonIcon className={styles.icon} />
+              <input type='text' placeholder='Username'/>
+            </div>
+        </div>
 
-  );
+        <div className={styles.inputs}>
+            <div className={styles.input}>
+              < LockIcon className={styles.icon} />
+                <input type='password' placeholder='Password'/>
+            </div>
+        </div>
+        
+        <div className={styles.submit_container}>
+            <Button className={styles.submit} variant="contained">Log In</Button>
+        </div>
+        
+        </div>
+
+    </main>
+  )
 }
