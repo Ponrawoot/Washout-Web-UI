@@ -2,8 +2,14 @@
 import React, { useState } from "react";
 import Navbar from "../navbar";
 
+interface Staff {
+  EmployeeID: string;
+  Name: string;
+  Branch: string;
+}
+
 function StaffManagement() {
-  const [staff, setStaff] = useState([
+  const [staff, setStaff] = useState<Staff[]>([
     { EmployeeID: "1001", Name: "ณภัทร ดรุนัยธร", Branch: "บรรทัดทอง" },
     { EmployeeID: "1002", Name: "พลวุฒิ ขำโขนงาม", Branch: "สามย่าน" },
     { EmployeeID: "1003", Name: "กาญจนี สถิตรังสีวงศ", Branch: "สยาม" },
@@ -14,17 +20,17 @@ function StaffManagement() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [staffToEdit, setStaffToEdit] = useState(null);
-  const [staffToDelete, setStaffToDelete] = useState(null);
+  const [staffToEdit, setStaffToEdit] = useState<Staff | null>(null);
+  const [staffToDelete, setStaffToDelete] = useState<Staff | null>(null);
 
   const [searchQuery, setSearchQuery] = useState("");
 
-  const handleDeleteStaff = (employeeID) => {
+  const handleDeleteStaff = (employeeID: string) => {
     const updatedStaff = staff.filter((employee) => employee.EmployeeID !== employeeID);
     setStaff(updatedStaff);
   };
 
-  const handleEditStaff = (employeeID, editedName, editedBranch) => {
+  const handleEditStaff = (employeeID: string, editedName: string, editedBranch: string) => {
     const updatedStaff = staff.map((employee) => {
       if (employee.EmployeeID === employeeID) {
         return { ...employee, Name: editedName, Branch: editedBranch };
@@ -34,17 +40,17 @@ function StaffManagement() {
     setStaff(updatedStaff);
   };
 
-  const handleEditClick = (employee) => {
-    setStaffToEdit(employee);
+  const handleEditClick = (staff: Staff) => {
+    setStaffToEdit(staff);
     setShowEditModal(true);
   };
 
-  const handleDeleteClick = (employee) => {
-    setStaffToDelete(employee);
+  const handleDeleteClick = (staff: Staff) => {
+    setStaffToDelete(staff);
     setShowDeleteModal(true);
   };
 
-  const handleAddStaff = (newStaff) => {
+  const handleAddStaff = (newStaff: Staff) => {
     setStaff([...staff, newStaff]);
     setShowAddModal(false);
   };
@@ -55,20 +61,19 @@ function StaffManagement() {
       <div className="container p-10">
         <h1 className="text-lg">ระบบจัดการพนักงาน</h1>
         <div className="flex justify-between items-center">
-            <button
-              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-4"
-              onClick={() => setShowAddModal(true)}
-            >
+          <input
+            className="border border-gray-300 p-2 rounded mt-4"
+            type="text"
+            placeholder="ค้นหา ประจำที่สาขา"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          <button
+            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-4"
+            onClick={() => setShowAddModal(true)}
+          >
             เพิ่มพนักงาน
-            </button>
-
-            <input
-              className="border border-gray-300 p-2 rounded mt-4"
-              type="text"
-              placeholder="ค้นหา ประจำที่สาขา"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+          </button>
         </div>
         <table className="mt-4 w-full border-collapse border border-gray-300">
           <thead>
@@ -82,8 +87,7 @@ function StaffManagement() {
           </thead>
           <tbody>
             {staff
-              .filter((employee) =>
-                employee.Branch.includes(searchQuery))
+              .filter((employee) => employee.Branch.includes(searchQuery))
               .map((employee) => (
                 <tr key={employee.EmployeeID} className="border border-gray-300">
                   <td className="border border-gray-300 px-4 py-2 text-center">{employee.EmployeeID}</td>
@@ -111,24 +115,30 @@ function StaffManagement() {
         </table>
       </div>
       {showAddModal && (
-        <StaffInputModal onSubmit={handleAddStaff} onClose={() => setShowAddModal(false)} />
+        <div className="fixed inset-0 flex items-center justify-center z-10 bg-black bg-opacity-50">
+          <StaffInputModal onSubmit={handleAddStaff} onClose={() => setShowAddModal(false)} />
+        </div>
       )}
       {showEditModal && (
-        <EditStaffModal
-          staffToEdit={staffToEdit}
-          onSave={handleEditStaff}
-          onClose={() => setShowEditModal(false)}
-        />
+        <div className="fixed inset-0 flex items-center justify-center z-10 bg-black bg-opacity-50">
+          <EditStaffModal
+            staffToEdit={staffToEdit}
+            onSave={handleEditStaff}
+            onClose={() => setShowEditModal(false)}
+          />
+        </div>
       )}
       {showDeleteModal && (
-        <DeleteStaffModal
-          staff={staffToDelete}
-          onDelete={() => {
-            handleDeleteStaff(staffToDelete.EmployeeID);
-            setShowDeleteModal(false);
-          }}
-          onClose={() => setShowDeleteModal(false)}
-        />
+        <div className="fixed inset-0 flex items-center justify-center z-10 bg-black bg-opacity-50">
+          <DeleteStaffModal
+            staff={staffToDelete}
+            onDelete={() => {
+              handleDeleteStaff(staffToDelete.EmployeeID);
+              setShowDeleteModal(false);
+            }}
+            onClose={() => setShowDeleteModal(false)}
+          />
+        </div>
       )}
     </main>
   );
