@@ -109,16 +109,21 @@ function StaffManagement() {
         </table>
       </div>
       {showAddModal && (
+        <div className="fixed inset-0 flex items-center justify-center z-10 bg-black bg-opacity-50">
         <StaffInputModal onSubmit={handleAddStaff} onClose={() => setShowAddModal(false)} />
+        </div>
       )}
       {showEditModal && (
+        <div className="fixed inset-0 flex items-center justify-center z-10 bg-black bg-opacity-50">
         <EditStaffModal
           staffToEdit={staffToEdit}
           onSave={handleEditStaff}
           onClose={() => setShowEditModal(false)}
         />
+        </div>
       )}
       {showDeleteModal && (
+        <div className="fixed inset-0 flex items-center justify-center z-10 bg-black bg-opacity-50">
         <DeleteStaffModal
           staff={staffToDelete}
           onDelete={() => {
@@ -127,6 +132,7 @@ function StaffManagement() {
           }}
           onClose={() => setShowDeleteModal(false)}
         />
+        </div>
       )}
     </main>
   );

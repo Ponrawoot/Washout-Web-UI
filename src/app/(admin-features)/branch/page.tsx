@@ -261,16 +261,21 @@ export default function BranchManagement() {
         </table>
       </div>
       {showAddModal && (
-        <BranchInputModal onSubmit={handleAddBranch} onClose={() => setShowAddModal(false)} />
+        <div className="fixed inset-0 flex items-center justify-center z-10 bg-black bg-opacity-50">
+          <BranchInputModal onSubmit={handleAddBranch} onClose={() => setShowAddModal(false)} />  
+        </div>
       )}
       {showEditModal && (
+        <div className="fixed inset-0 flex items-center justify-center z-10 bg-black bg-opacity-50">
         <EditBranchModal
           branchToEdit={branchToEdit}
           onSave={handleEditBranch}
           onClose={() => setShowEditModal(false)}
         />
+        </div>
       )}
       {showDeleteModal && (
+        <div className="fixed inset-0 flex items-center justify-center z-10 bg-black bg-opacity-50">
         <DeleteBranchModal
           branch={branchToDelete}
           onDelete={() => {
@@ -279,6 +284,7 @@ export default function BranchManagement() {
           }}
           onClose={() => setShowDeleteModal(false)}
         />
+        </div>
       )}
     </main>
   );

@@ -108,16 +108,21 @@ export default function MachineManagement() {
         </table>
       </div>
       {showAddModal && (
+        <div className="fixed inset-0 flex items-center justify-center z-10 bg-black bg-opacity-50">
         <MachineInputModal onSubmit={handleAddMachine} onClose={() => setShowAddModal(false)} />
+        </div>
       )}
       {showEditModal && (
+        <div className="fixed inset-0 flex items-center justify-center z-10 bg-black bg-opacity-50">
         <EditMachineModal
           machineToEdit={machineToEdit}
           onSave={handleEditMachine}
           onClose={() => setShowEditModal(false)}
         />
+        </div>
       )}
       {showDeleteModal && (
+        <div className="fixed inset-0 flex items-center justify-center z-10 bg-black bg-opacity-50">
         <DeleteMachineModal
           machine={machineToDelete}
           onDelete={() => {
@@ -126,6 +131,7 @@ export default function MachineManagement() {
           }}
           onClose={() => setShowDeleteModal(false)}
         />
+        </div>
       )}
     </main>
   );
