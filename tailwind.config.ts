@@ -15,6 +15,8 @@ const config: Config = {
       },
       colors : {
         'primary-blue': '#91C8E4',
+        'blue-button' : '#0D99FF',
+        'red-button' : '#DB0505'
       }
     },
   },

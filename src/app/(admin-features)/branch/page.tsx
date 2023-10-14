@@ -8,7 +8,7 @@ function Branch({ BranchID, BranchName, onDelete, onEdit }:{ BranchID:string, Br
       <td className="border border-gray-300 px-4 py-2 text-center">{BranchName}</td>
       <td className="border border-gray-300 px-4 py-2 text-center">
         <button
-          className="bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-2 rounded"
+          className="bg-blue-button hover:bg-blue-700 text-white font-bold py-1 px-2 rounded"
           onClick={onEdit}
         >
           แก้ไข
@@ -16,7 +16,7 @@ function Branch({ BranchID, BranchName, onDelete, onEdit }:{ BranchID:string, Br
       </td>
       <td className="border border-gray-300 px-4 py-2 text-center">
         <button
-          className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded"
+          className="bg-red-button hover:bg-red-700 text-white font-bold py-1 px-2 rounded"
           onClick={onDelete}
         >
           ลบ
@@ -69,7 +69,7 @@ function BranchInputModal({ onSubmit, onClose }:{
             className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-700"
             onClick={handleSubmit}
           >
-            เพิ่มสาขา
+            ยืนยัน
           </button>
           <button
             className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-700 ml-2"
@@ -233,7 +233,7 @@ export default function BranchManagement() {
       <div className="container p-10">
         <h1 className="text-lg">ระบบจัดการสาขา</h1>
         <button
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-4"
+          className="bg-blue-button hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-4"
           onClick={() => setShowAddModal(true)}
         >
           เพิ่มสาขา

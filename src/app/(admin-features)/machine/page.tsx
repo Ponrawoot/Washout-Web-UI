@@ -7,22 +7,40 @@ export default function MachineManagement() {
     { MachineID: "2", MachineType: "Any", Branch: "สามย่าน" },
     { MachineID: "3", MachineType: "20 kg", Branch: "สยาม" },
     { MachineID: "4", MachineType: "16 kg", Branch: "บางนา" },
-  ])
+  ]);
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [machineToEdit, setMachineToEdit] = useState({ MachineID: "", MachineType: "", Branch: "" });
-  const [machineToDelete, setMachineToDelete] = useState({ MachineID: "", MachineType: "", Branch: "" });
+  const [machineToEdit, setMachineToEdit] = useState({
+    MachineID: "",
+    MachineType: "",
+    Branch: "",
+  });
+  const [machineToDelete, setMachineToDelete] = useState({
+    MachineID: "",
+    MachineType: "",
+    Branch: "",
+  });
 
   const [searchQuery, setSearchQuery] = useState("");
 
-  const handleDeleteMachine = (ID:string) => {
-    const updatedMachine = machine.filter((specificMachine: { MachineID: string, MachineType: string, Branch: string}) => specificMachine.MachineID !== ID);
+  const handleDeleteMachine = (ID: string) => {
+    const updatedMachine = machine.filter(
+      (specificMachine: {
+        MachineID: string;
+        MachineType: string;
+        Branch: string;
+      }) => specificMachine.MachineID !== ID
+    );
     setMachine(updatedMachine);
   };
 
-  const handleEditMachine = (ID:string, editedName:string, editedBranch:string) => {
+  const handleEditMachine = (
+    ID: string,
+    editedName: string,
+    editedBranch: string
+  ) => {
     const updatedMachine = machine.map((specificMachine) => {
       if (specificMachine.MachineID === ID) {
         return { ...specificMachine, Name: editedName, Branch: editedBranch };
@@ -32,17 +50,29 @@ export default function MachineManagement() {
     setMachine(updatedMachine);
   };
 
-  const handleEditClick = (machine: { MachineID: string, MachineType: string, Branch: string}) => {
+  const handleEditClick = (machine: {
+    MachineID: string;
+    MachineType: string;
+    Branch: string;
+  }) => {
     setMachineToEdit(machine);
     setShowEditModal(true);
   };
 
-  const handleDeleteClick = (machine: { MachineID: string, MachineType: string, Branch: string}) => {
+  const handleDeleteClick = (machine: {
+    MachineID: string;
+    MachineType: string;
+    Branch: string;
+  }) => {
     setMachineToDelete(machine);
     setShowDeleteModal(true);
   };
 
-  const handleAddMachine = (newMachine: { MachineID: string, MachineType: string, Branch: string}) => {
+  const handleAddMachine = (newMachine: {
+    MachineID: string;
+    MachineType: string;
+    Branch: string;
+  }) => {
     setMachine([...machine, newMachine]);
     setShowAddModal(false);
   };
@@ -52,20 +82,20 @@ export default function MachineManagement() {
       <div className="container p-10">
         <h1 className="text-lg">ระบบจัดเครื่องซักผ้า</h1>
         <div className="flex justify-between items-center">
-            <button
-              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-4"
-              onClick={() => setShowAddModal(true)}
-            >
+          <button
+            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-4"
+            onClick={() => setShowAddModal(true)}
+          >
             เพิ่มเครื่อง
-            </button>
+          </button>
 
-            <input
-              className="border border-gray-300 p-2 rounded mt-4"
-              type="text"
-              placeholder="ค้นหาจากสาขา"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+          <input
+            className="border border-gray-300 p-2 rounded mt-4"
+            type="text"
+            placeholder="ค้นหาจากสาขา"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
         </div>
         <table className="mt-4 w-full border-collapse border border-gray-300">
           <thead>
@@ -79,16 +109,21 @@ export default function MachineManagement() {
           </thead>
           <tbody>
             {machine
-              .filter((machine) =>
-              machine.Branch.includes(searchQuery))
+              .filter((machine) => machine.Branch.includes(searchQuery))
               .map((machine) => (
                 <tr key={machine.MachineID} className="border border-gray-300">
-                  <td className="border border-gray-300 px-4 py-2 text-center">{machine.MachineID}</td>
-                  <td className="border border-gray-300 px-4 py-2 text-center">{machine.MachineType}</td>
-                  <td className="border border-gray-300 px-4 py-2 text-center">{machine.Branch}</td>
+                  <td className="border border-gray-300 px-4 py-2 text-center">
+                    {machine.MachineID}
+                  </td>
+                  <td className="border border-gray-300 px-4 py-2 text-center">
+                    {machine.MachineType}
+                  </td>
+                  <td className="border border-gray-300 px-4 py-2 text-center">
+                    {machine.Branch}
+                  </td>
                   <td className="border border-gray-300 px-4 py-2 text-center">
                     <button
-                      className="bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-2 rounded"
+                      className="bg-blue-button hover:bg-blue-700 text-white font-bold py-1 px-2 rounded"
                       onClick={() => handleEditClick(machine)}
                     >
                       แก้ไข
@@ -109,42 +144,58 @@ export default function MachineManagement() {
       </div>
       {showAddModal && (
         <div className="fixed inset-0 flex items-center justify-center z-10 bg-black bg-opacity-50">
-        <MachineInputModal onSubmit={handleAddMachine} onClose={() => setShowAddModal(false)} />
+          <MachineInputModal
+            onSubmit={handleAddMachine}
+            onClose={() => setShowAddModal(false)}
+          />
         </div>
       )}
       {showEditModal && (
         <div className="fixed inset-0 flex items-center justify-center z-10 bg-black bg-opacity-50">
-        <EditMachineModal
-          machineToEdit={machineToEdit}
-          onSave={handleEditMachine}
-          onClose={() => setShowEditModal(false)}
-        />
+          <EditMachineModal
+            machineToEdit={machineToEdit}
+            onSave={handleEditMachine}
+            onClose={() => setShowEditModal(false)}
+          />
         </div>
       )}
       {showDeleteModal && (
         <div className="fixed inset-0 flex items-center justify-center z-10 bg-black bg-opacity-50">
-        <DeleteMachineModal
-          machine={machineToDelete}
-          onDelete={() => {
-            handleDeleteMachine(machineToDelete.MachineID);
-            setShowDeleteModal(false);
-          }}
-          onClose={() => setShowDeleteModal(false)}
-        />
+          <DeleteMachineModal
+            machine={machineToDelete}
+            onDelete={() => {
+              handleDeleteMachine(machineToDelete.MachineID);
+              setShowDeleteModal(false);
+            }}
+            onClose={() => setShowDeleteModal(false)}
+          />
         </div>
       )}
     </main>
   );
 }
 
-function MachineInputModal({ onSubmit, onClose }:{onSubmit: (data: { MachineID: string, MachineType: string, Branch: string}) => void,
-  onClose:() => void}) {
+function MachineInputModal({
+  onSubmit,
+  onClose,
+}: {
+  onSubmit: (data: {
+    MachineID: string;
+    MachineType: string;
+    Branch: string;
+  }) => void;
+  onClose: () => void;
+}) {
   const [machineType, setMachineType] = useState("");
   const [machineBranch, setMachineBranch] = useState("");
 
   const handleSubmit = () => {
     const uniqueMachineID = new Date().getTime().toString();
-    onSubmit({ MachineID: uniqueMachineID, MachineType: machineType, Branch: machineBranch });
+    onSubmit({
+      MachineID: uniqueMachineID,
+      MachineType: machineType,
+      Branch: machineBranch,
+    });
     setMachineType("");
     setMachineBranch("");
     onClose();
@@ -168,12 +219,16 @@ function MachineInputModal({ onSubmit, onClose }:{onSubmit: (data: { MachineID: 
         <div className="modal-body">
           <label className="block mb-2">
             ประเภท:
-            <input
+            <select
               className="border border-gray-300 p-2 w-full rounded"
-              type="text"
               value={machineType}
-              onChange={(e) => setMachineType(e.target.value)}
-            />
+              onChange={(e) => {setMachineType(e.target.value);
+              console.log(e.target.value)}}
+            >
+              <option value="16 kg">16 kg</option>
+              <option value="20 kg">20 kg</option>
+              <option value="Any">Any</option>
+            </select>
           </label>
           <label className="block mb-2">
             ประจำที่สาขา:
@@ -204,14 +259,20 @@ function MachineInputModal({ onSubmit, onClose }:{onSubmit: (data: { MachineID: 
   );
 }
 
-function EditMachineModal({ machineToEdit, onSave, onClose }:
-  { machineToEdit:{ MachineID: string, MachineType: string, Branch: string},
-    onSave:(MachineID: string, MachineType: string, Branch: string) => void,
-    onClose: () => void}) {
+function EditMachineModal({
+  machineToEdit,
+  onSave,
+  onClose,
+}: {
+  machineToEdit: { MachineID: string; MachineType: string; Branch: string };
+  onSave: (MachineID: string, MachineType: string, Branch: string) => void;
+  onClose: () => void;
+}) {
   const [editedType, setEditedType] = useState(machineToEdit.MachineType);
   const [editedBranch, setEditedBranch] = useState(machineToEdit.Branch);
 
   const handleSaveClick = () => {
+    console.log(editedType)
     onSave(machineToEdit.MachineID, editedType, editedBranch);
     onClose();
   };
@@ -224,7 +285,7 @@ function EditMachineModal({ machineToEdit, onSave, onClose }:
     <div className="modal fixed inset-0 flex items-center justify-center z-50">
       <div className="modal-content bg-white p-4 w-1/3 rounded-lg shadow-md">
         <div className="modal-header flex justify-between items-center mb-4">
-          <h2 className="text-xl">แก้ไขพนักงาน</h2>
+          <h2 className="text-xl">แก้ไขเครื่องซักผ้า</h2>
           <button className="close-button text-xl" onClick={onClose}>
             &times;
           </button>
@@ -232,12 +293,16 @@ function EditMachineModal({ machineToEdit, onSave, onClose }:
         <div className="modal-body">
           <label className="block mb-2">
             ประเภท:
-            <input
+            <select
               className="border border-gray-300 p-2 w-full rounded"
-              type="text"
               value={editedType}
-              onChange={(e) => setEditedType(e.target.value)}
-            />
+              onChange={(e) => {setEditedType(e.target.value);
+                console.log(editedType)}}
+            >
+              <option value="16 kg">16 kg</option>
+              <option value="20 kg">20 kg</option>
+              <option value="Any">Any</option>
+            </select>
           </label>
           <label className="block mb-2">
             ประจำที่สาขา:
@@ -268,22 +333,26 @@ function EditMachineModal({ machineToEdit, onSave, onClose }:
   );
 }
 
-function DeleteMachineModal({ machine, onDelete, onClose }:
-  { machine:{ MachineID: string, MachineType: string, Branch: string },
-    onDelete:() => void,
-    onClose:() => void }
-  ) {
+function DeleteMachineModal({
+  machine,
+  onDelete,
+  onClose,
+}: {
+  machine: { MachineID: string; MachineType: string; Branch: string };
+  onDelete: () => void;
+  onClose: () => void;
+}) {
   return (
     <div className="modal fixed inset-0 flex items-center justify-center z-50">
       <div className="modal-content bg-white p-4 w-1/3 rounded-lg shadow-md">
         <div className="modal-header flex justify-between items-center mb-4">
-          <h2 className="text-xl">ยืนยันการลบพนักงาน</h2>
+          <h2 className="text-xl">ลบเครื่องซักผ้า</h2>
           <button className="close-button text-xl" onClick={onClose}>
             &times;
           </button>
         </div>
         <div className="modal-body">
-          <p>คุณต้องการลบเครื่องซักผ้าดังต่อไปนี้หรือไม่?</p>
+          <p>คุณต้องการลบเครื่องซักผ้าด้านล่างนี่ใช่หรือไม่?</p>
           <p className="font-semibold">หมายเลข: {machine.MachineID}</p>
           <p className="font-semibold">ประเภท: {machine.MachineType}</p>
           <p className="font-semibold">ประจำที่สาขา: {machine.Branch}</p>

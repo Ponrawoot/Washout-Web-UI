@@ -89,7 +89,7 @@ function StaffManagement() {
                   <td className="border border-gray-300 px-4 py-2 text-center">{employee.Branch}</td>
                   <td className="border border-gray-300 px-4 py-2 text-center">
                     <button
-                      className="bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-2 rounded"
+                      className="bg-blue-button hover:bg-blue-700 text-white font-bold py-1 px-2 rounded"
                       onClick={() => handleEditClick(employee)}
                     >
                       แก้ไข
