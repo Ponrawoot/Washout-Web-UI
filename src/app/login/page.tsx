@@ -23,7 +23,7 @@ export default function Home() {
 
   return (
     <main className={styles.main}>
-      <div className='w-full h-[112.5px]'>
+      <div className='w-full h-[220px]'>
       </div>
       <div className={styles.container}>
         <div className={styles.header}>
@@ -60,7 +60,7 @@ export default function Home() {
           </Button>
         </div>
       </div>
-      <div className='w-full h-[112.5px]'>
+      <div className='w-full h-[221px]'>
       </div>
     </main>
   );
