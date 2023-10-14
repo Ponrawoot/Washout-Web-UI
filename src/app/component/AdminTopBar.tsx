@@ -11,6 +11,13 @@ export default function AdminTopBar() {
   const [isStaffPage, setIsStaffPage] = useState(false)
   const [isMachinePage, setIsMachinePage] = useState(false)
 
+  useEffect(() => {
+    // Update page states based on the current route
+    setIsBranchPage(window.location.pathname === '/branch');
+    setIsStaffPage(window.location.pathname === '/staff');
+    setIsMachinePage(window.location.pathname === '/machine');
+  }, []);
+
   const handleBranchIconClick = () => {
     setIsBranchPage(true);
     setIsStaffPage(false);
