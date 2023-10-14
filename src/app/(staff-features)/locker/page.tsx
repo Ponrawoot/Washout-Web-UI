@@ -13,14 +13,14 @@ export default function LockerManagement() {
   ]);
 
   const [showAddModal, setShowAddModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [lockerToEdit, setLockerToEdit] = useState({
+  const [showTransferToModal, setShowTransferToModal] = useState(false);
+  const [showFreeModal, setShowFreeModal] = useState(false);
+  const [lockerToTransfer, setLockerToTransfer] = useState({
     LockerID: "",
     Status: "",
     UID: "",
   });
-  const [lockerToDelete, setLockerToDelete] = useState({
+  const [lockerToFree, setLockerToFree] = useState({
     LockerID: "",
     Status: "",
     UID: "",
@@ -28,34 +28,30 @@ export default function LockerManagement() {
 
   const [searchQuery, setSearchQuery] = useState("");
 
-  // const handleTransferLocker = (ID:string) => {
-  //   const updatedLocker = locker.filter((specificMachine: { MachineID: string, MachineType: string, Branch: string}) => specificMachine.MachineID !== ID);
-  //   setMachine(updatedLocker);
-  // };
 
   const handleModifiedLocker = (
     ID: string,
     editedStatus: string,
     editedUID: string
   ) => {
-    const updatedLocker = locker.map((specificLocker) => {
+    const updatedLocker = locker.map((specificLocker: {LockerID:string, Status:string, UID:string}) => {
       if (specificLocker.LockerID === ID) {
-        return { ...specificLocker, Name: editedStatus, UID: editedUID };
+        return { ...specificLocker, Status: editedStatus, UID: editedUID };
       }
       return specificLocker;
     });
     setLocker(updatedLocker);
   };
 
-  // const handleEditClick = (machine: { MachineID: string, MachineType: string, Branch: string}) => {
-  //   setMachineToEdit(machine);
-  //   setShowEditModal(true);
-  // };
+  const handleTransferClick = (locker: {LockerID:string, Status:string, UID:string}) => {
+    setLockerToTransfer(locker);
+    setShowTransferToModal(true);
+  };
 
-  // const handleDeleteClick = (machine: { MachineID: string, MachineType: string, Branch: string}) => {
-  //   setMachineToDelete(machine);
-  //   setShowDeleteModal(true);
-  // };
+  const handleFreeClick = (locker: {LockerID:string, Status:string, UID:string}) => {
+    setLockerToFree(locker);
+    setShowFreeModal(true);
+  };
 
   // const handleAddMachine = (newMachine: { MachineID: string, MachineType: string, Branch: string}) => {
   //   setMachine([...machine, newMachine]);
@@ -110,7 +106,7 @@ export default function LockerManagement() {
                         : ""
                     }`}
                     disabled={locker.Status === "ว่าง"}
-                    // onClick={() => handleDeleteClick(machine)}
+                    onClick={() => handleFreeClick(locker)}
                   >
                     คืนผ้า
                   </button>
@@ -120,211 +116,105 @@ export default function LockerManagement() {
           </tbody>
         </table>
       </div>
-      {showAddModal && (
-        <MachineInputModal
-          onSubmit={handleModifiedLocker}
-          onClose={() => setShowAddModal(false)}
-        />
-      )}
-      {showEditModal && (
-        <EditMachineModal
-          machineToEdit={machineToEdit}
-          onSave={handleModifiedLocker}
-          onClose={() => setShowEditModal(false)}
-        />
-      )}
-      {showDeleteModal && (
-        <DeleteMachineModal
-          machine={machineToDelete}
-          onDelete={() => {
-            handleModifiedLocker(machineToDelete.MachineID);
-            setShowDeleteModal(false);
+      {showTransferToModal && (
+        <div className="fixed inset-0 flex items-center justify-center z-10 bg-black bg-opacity-50">
+        <TransferToLockerModal
+          locker={lockerToTransfer}
+          onSave={() => {
+            handleModifiedLocker(lockerToTransfer.LockerID,"กำลังใช้งาน","f09bc70e-5f88-428a-938d-eb4ac0fad712")
           }}
-          onClose={() => setShowDeleteModal(false)}
+          onClose={() => setShowTransferToModal(false)}
         />
+        </div>
+      )}
+      {showFreeModal && (
+        <div className="fixed inset-0 flex items-center justify-center z-10 bg-black bg-opacity-50">
+        <FreeLockerModal
+          locker={lockerToFree}
+          onSave={() => {
+            handleModifiedLocker(lockerToFree.LockerID,"ว่าง","-")
+            setShowFreeModal(false);
+          }}
+          onClose={() => setShowFreeModal(false)}
+        />
+        </div>
       )}
     </main>
   );
 }
 
-function MachineInputModal({
-  onSubmit,
-  onClose,
-}: {
-  onSubmit: (data: {
-    MachineID: string;
-    MachineType: string;
-    Branch: string;
-  }) => void;
-  onClose: () => void;
-}) {
-  const [machineType, setMachineType] = useState("");
-  const [machineBranch, setMachineBranch] = useState("");
 
-  const handleSubmit = () => {
-    const uniqueMachineID = new Date().getTime().toString();
-    onSubmit({
-      MachineID: uniqueMachineID,
-      MachineType: machineType,
-      Branch: machineBranch,
-    });
-    setMachineType("");
-    setMachineBranch("");
-    onClose();
-  };
-
-  const handleCancel = () => {
-    setMachineType("");
-    setMachineBranch("");
-    onClose();
-  };
-
-  return (
-    <div className="modal fixed inset-0 flex items-center justify-center z-50">
-      <div className="modal-content bg-white p-4 w-1/3 rounded-lg shadow-md">
-        <div className="modal-header flex justify-between items-center mb-4">
-          <h2 className="text-xl">เพิ่มเครื่อง</h2>
-          <button className="close-button text-xl" onClick={onClose}>
-            &times;
-          </button>
-        </div>
-        <div className="modal-body">
-          <label className="block mb-2">
-            ประเภท:
-            <input
-              className="border border-gray-300 p-2 w-full rounded"
-              type="text"
-              value={machineType}
-              onChange={(e) => setMachineType(e.target.value)}
-            />
-          </label>
-          <label className="block mb-2">
-            ประจำที่สาขา:
-            <input
-              className="border border-gray-300 p-2 w-full rounded"
-              type="text"
-              value={machineBranch}
-              onChange={(e) => setMachineBranch(e.target.value)}
-            />
-          </label>
-        </div>
-        <div className="modal-footer">
-          <button
-            className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-700"
-            onClick={handleSubmit}
-          >
-            เพิ่มเครื่อง
-          </button>
-          <button
-            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-700 ml-2"
-            onClick={handleCancel}
-          >
-            ยกเลิก
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function EditMachineModal({
-  machineToEdit,
+function TransferToLockerModal({
+  locker,
   onSave,
   onClose,
 }: {
-  machineToEdit: { MachineID: string; MachineType: string; Branch: string };
-  onSave: (MachineID: string, MachineType: string, Branch: string) => void;
-  onClose: () => void;
-}) {
-  const [editedType, setEditedType] = useState(machineToEdit.MachineType);
-  const [editedBranch, setEditedBranch] = useState(machineToEdit.Branch);
-
-  const handleSaveClick = () => {
-    onSave(machineToEdit.MachineID, editedType, editedBranch);
-    onClose();
-  };
-
-  const handleCancel = () => {
-    onClose();
-  };
-
-  return (
-    <div className="modal fixed inset-0 flex items-center justify-center z-50">
-      <div className="modal-content bg-white p-4 w-1/3 rounded-lg shadow-md">
-        <div className="modal-header flex justify-between items-center mb-4">
-          <h2 className="text-xl">แก้ไขพนักงาน</h2>
-          <button className="close-button text-xl" onClick={onClose}>
-            &times;
-          </button>
-        </div>
-        <div className="modal-body">
-          <label className="block mb-2">
-            ประเภท:
-            <input
-              className="border border-gray-300 p-2 w-full rounded"
-              type="text"
-              value={editedType}
-              onChange={(e) => setEditedType(e.target.value)}
-            />
-          </label>
-          <label className="block mb-2">
-            ประจำที่สาขา:
-            <input
-              className="border border-gray-300 p-2 w-full rounded"
-              type="text"
-              value={editedBranch}
-              onChange={(e) => setEditedBranch(e.target.value)}
-            />
-          </label>
-        </div>
-        <div className="modal-footer">
-          <button
-            className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-700"
-            onClick={handleSaveClick}
-          >
-            บันทึก
-          </button>
-          <button
-            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-700 ml-2"
-            onClick={handleCancel}
-          >
-            ยกเลิก
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function DeleteMachineModal({
-  machine,
-  onDelete,
-  onClose,
-}: {
-  machine: { MachineID: string; MachineType: string; Branch: string };
-  onDelete: () => void;
+  locker: { LockerID: string; Status: string; UID: string };
+  onSave: (LockerID: string, Status: string, UID: string) => void;
   onClose: () => void;
 }) {
   return (
     <div className="modal fixed inset-0 flex items-center justify-center z-50">
       <div className="modal-content bg-white p-4 w-1/3 rounded-lg shadow-md">
         <div className="modal-header flex justify-between items-center mb-4">
-          <h2 className="text-xl">ยืนยันการลบพนักงาน</h2>
+          <h2 className="text-xl">ย้ายผ้า</h2>
           <button className="close-button text-xl" onClick={onClose}>
             &times;
           </button>
         </div>
         <div className="modal-body">
-          <p>คุณต้องการลบเครื่องซักผ้าดังต่อไปนี้หรือไม่?</p>
-          <p className="font-semibold">หมายเลข: {machine.MachineID}</p>
-          <p className="font-semibold">ประเภท: {machine.MachineType}</p>
-          <p className="font-semibold">ประจำที่สาขา: {machine.Branch}</p>
+          <p>หมายเลขเครื่องซักผ้า</p>
+          <p className="font-semibold">หมายเลขตู้เก็บผ้า {locker.LockerID}</p>
         </div>
         <div className="modal-footer">
           <button
             className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-700"
             onClick={() => {
-              onDelete();
+              onSave(locker.LockerID,locker.Status,locker.UID);
+              onClose();
+            }}
+          >
+            ยืนยัน
+          </button>
+          <button
+            className="bg-gray-300 text-black px-4 py-2 rounded hover:bg-gray-400 ml-2"
+            onClick={onClose}
+          >
+            ยกเลิก
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FreeLockerModal({
+  locker,
+  onSave,
+  onClose,
+}: {
+  locker: { LockerID: string; Status: string; UID: string };
+  onSave: (LockerID: string, Status: string, UID: string) => void;
+  onClose: () => void;
+}) {
+  return (
+    <div className="modal fixed inset-0 flex items-center justify-center z-50">
+      <div className="modal-content bg-white p-4 w-1/3 rounded-lg shadow-md">
+        <div className="modal-header flex justify-between items-center mb-4">
+          <h2 className="text-xl">คืนผ้า</h2>
+          <button className="close-button text-xl" onClick={onClose}>
+            &times;
+          </button>
+        </div>
+        <div className="modal-body">
+          <p>กรุณาตรวจสอบ uid ก่อนทำการคืนผ้า</p>
+          <p className="font-semibold">{locker.UID}</p>
+        </div>
+        <div className="modal-footer">
+          <button
+            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-700"
+            onClick={() => {
+              onSave(locker.LockerID,locker.Status,locker.UID);
               onClose();
             }}
           >
