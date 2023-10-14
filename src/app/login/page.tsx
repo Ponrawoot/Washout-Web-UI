@@ -23,6 +23,8 @@ export default function Home() {
 
   return (
     <main className={styles.main}>
+      <div className='w-full h-[112.5px]'>
+      </div>
       <div className={styles.container}>
         <div className={styles.header}>
           <p>Login</p>
@@ -57,6 +59,8 @@ export default function Home() {
             Log In
           </Button>
         </div>
+      </div>
+      <div className='w-full h-[112.5px]'>
       </div>
     </main>
   );
