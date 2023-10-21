@@ -64,6 +64,9 @@ export default function AdminTopBar() {
             <li>
               <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center"></div>
             </li>
+            <li>
+          <button onClick={() =>router.replace("/login")}>Log Out</button>
+            </li>
           </ul>
         </div>
       </div>
