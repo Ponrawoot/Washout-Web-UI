@@ -1,6 +1,6 @@
 "use client"; 
-import { MouseEventHandler, useState } from "react";
-
+import { MouseEventHandler, useState, useEffect } from "react";
+import axios from "axios";
 function Branch({ BranchID, BranchName, onDelete, onEdit }:{ BranchID:string, BranchName:string, onDelete:MouseEventHandler<HTMLButtonElement>, onEdit:MouseEventHandler<HTMLButtonElement>}) {
   return (
     <tr className="border border-gray-300">
@@ -184,13 +184,38 @@ onClose: () => void;}) {
   );
 }
 
+interface Branch {
+  BranchID: string;
+  BranchName: string;
+}
+
 export default function BranchManagement() {
-  const [branches, setBranches] = useState([
-    { BranchID: "202001", BranchName: "บรรทัดทอง" },
-    { BranchID: "202002", BranchName: "สามย่าน" },
-    { BranchID: "202003", BranchName: "สยาม" },
-    { BranchID: "202004", BranchName: "บางนา" },
-  ]);
+  const [branches, setBranches] = useState<Branch[]>([]);
+
+  // Function to fetch branches
+  const fetchBranches = async () => {
+    try {
+      const response = await axios.get("http://localhost:3001/api/branches/");
+      const convertedBranches = response.data.branches.map((branch: { id: string; name: string; }) => {
+        return { BranchID: branch.id, BranchName: branch.name };
+      });
+
+      setBranches(convertedBranches);
+      console.log("Branches fetched successfully!");
+    } catch (error) {
+      console.error("Error fetching branches:", error);
+    }
+  };
+
+  // Use the useEffect hook to fetch branches when the component mounts
+  useEffect(() => {
+    fetchBranches();
+  }, []); // Empty dependency array ensures it only runs once when the component mounts
+
+  // useEffect(() => {
+  //   const intervalId = setInterval(fetchBranches, 1000); // Fetch every 60 seconds (adjust as needed)
+  //   return () => clearInterval(intervalId); // Cleanup on unmount
+  // }, []);
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
