@@ -1,4 +1,4 @@
-import StaffTopBar from "@/app/component/StaffTopBar";
+import StaffTopBar from "@/component/StaffTopBar";
 
 export default function RootLayout({children} : {children:React.ReactNode}) {
     return (

@@ -1,7 +1,10 @@
 "use client"; 
-import { MouseEventHandler, useState } from "react";
+import { MouseEventHandler, useState, useEffect } from "react";
+import axios from "axios";
 
 function Branch({ BranchID, BranchName, onDelete, onEdit }:{ BranchID:string, BranchName:string, onDelete:MouseEventHandler<HTMLButtonElement>, onEdit:MouseEventHandler<HTMLButtonElement>}) {
+
+
   return (
     <tr className="border border-gray-300">
       <td className="border border-gray-300 px-4 py-2 text-center">{BranchID}</td>
@@ -185,6 +188,13 @@ onClose: () => void;}) {
 }
 
 export default function BranchManagement() {
+  useEffect(() => {
+    const url = "http://localhost:3001/api/branches/"
+    axios.get(url).then((response) => {
+      setBranches(response.data);
+    });
+  }, []); 
+  
   const [branches, setBranches] = useState([
     { BranchID: "202001", BranchName: "บรรทัดทอง" },
     { BranchID: "202002", BranchName: "สามย่าน" },
