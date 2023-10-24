@@ -1,7 +1,10 @@
 "use client"; 
 import { MouseEventHandler, useState, useEffect } from "react";
 import axios from "axios";
+
 function Branch({ BranchID, BranchName, onDelete, onEdit }:{ BranchID:string, BranchName:string, onDelete:MouseEventHandler<HTMLButtonElement>, onEdit:MouseEventHandler<HTMLButtonElement>}) {
+
+
   return (
     <tr className="border border-gray-300">
       <td className="border border-gray-300 px-4 py-2 text-center">{BranchID}</td>
