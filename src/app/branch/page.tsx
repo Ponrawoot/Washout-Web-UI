@@ -1,15 +1,17 @@
 "use client"; 
-import React, { useState } from "react";
-import Navbar from "../navbar";
+import { MouseEventHandler, useState, useEffect } from "react";
+import axios from "axios";
 
-function Branch({ BranchID, BranchName, onDelete, onEdit }) {
+function Branch({ BranchID, BranchName, onDelete, onEdit }:{ BranchID:string, BranchName:string, onDelete:MouseEventHandler<HTMLButtonElement>, onEdit:MouseEventHandler<HTMLButtonElement>}) {
+
+
   return (
     <tr className="border border-gray-300">
       <td className="border border-gray-300 px-4 py-2 text-center">{BranchID}</td>
       <td className="border border-gray-300 px-4 py-2 text-center">{BranchName}</td>
       <td className="border border-gray-300 px-4 py-2 text-center">
         <button
-          className="bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-2 rounded"
+          className="bg-blue-button hover:bg-blue-700 text-white font-bold py-1 px-2 rounded"
           onClick={onEdit}
         >
           แก้ไข
@@ -17,7 +19,7 @@ function Branch({ BranchID, BranchName, onDelete, onEdit }) {
       </td>
       <td className="border border-gray-300 px-4 py-2 text-center">
         <button
-          className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded"
+          className="bg-red-button hover:bg-red-700 text-white font-bold py-1 px-2 rounded"
           onClick={onDelete}
         >
           ลบ
@@ -27,7 +29,10 @@ function Branch({ BranchID, BranchName, onDelete, onEdit }) {
   );
 }
 
-function BranchInputModal({ onSubmit, onClose }) {
+function BranchInputModal({ onSubmit, onClose }:{
+  onSubmit: (data: { BranchID: string; BranchName: string }) => void;
+  onClose: () => void;
+}) {
   const [branchName, setBranchName] = useState("");
 
   const handleSubmit = () => {
@@ -67,7 +72,7 @@ function BranchInputModal({ onSubmit, onClose }) {
             className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-700"
             onClick={handleSubmit}
           >
-            เพิ่มสาขา
+            ยืนยัน
           </button>
           <button
             className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-700 ml-2"
@@ -81,13 +86,18 @@ function BranchInputModal({ onSubmit, onClose }) {
   );
 }
 
-function EditBranchModal({ branchToEdit, onSave, onClose }) {
-  const [editedBranchName, setEditedBranchName] = useState(branchToEdit.BranchName);
+function EditBranchModal({ branchToEdit, onSave, onClose }:{ branchToEdit: { BranchID: string | null; BranchName: string | null },
+   onSave:(branchID: string, editedBranchName: string) => void,
+   onClose:() => void}) {
+  const [editedBranchName, setEditedBranchName] = useState(branchToEdit.BranchName || "");
 
   const handleSaveClick = () => {
-    onSave(branchToEdit.BranchID, editedBranchName);
-    onClose();
-  };
+    if (branchToEdit.BranchID !== null && editedBranchName !== null) {
+      onSave(branchToEdit.BranchID, editedBranchName);
+      onClose();
+    }
+  }
+  ;
 
   const handleCancel = () => {
     onClose();
@@ -132,7 +142,9 @@ function EditBranchModal({ branchToEdit, onSave, onClose }) {
   );
 }
 
-function DeleteBranchModal({ branch, onDelete, onClose }) {
+function DeleteBranchModal({ branch, onDelete, onClose }:{branch: { BranchID: string; BranchName: string; }
+onDelete:() => void;
+onClose: () => void;}) {
   return (
     <div className="modal fixed inset-0 flex items-center justify-center z-50">
       <div className="modal-content bg-white p-4 w-1/3 rounded-lg shadow-md">
@@ -175,26 +187,51 @@ function DeleteBranchModal({ branch, onDelete, onClose }) {
   );
 }
 
+interface Branch {
+  BranchID: string;
+  BranchName: string;
+}
+
 export default function BranchManagement() {
-  const [branches, setBranches] = useState([
-    { BranchID: "202001", BranchName: "บรรทัดทอง" },
-    { BranchID: "202002", BranchName: "สามย่าน" },
-    { BranchID: "202003", BranchName: "สยาม" },
-    { BranchID: "202004", BranchName: "บางนา" },
-  ]);
+  const [branches, setBranches] = useState<Branch[]>([]);
+
+  // Function to fetch branches
+  const fetchBranches = async () => {
+    try {
+      const response = await axios.get("http://localhost:3001/api/branches/");
+      const convertedBranches = response.data.branches.map((branch: { id: string; name: string; }) => {
+        return { BranchID: branch.id, BranchName: branch.name };
+      });
+
+      setBranches(convertedBranches);
+      console.log("Branches fetched successfully!");
+    } catch (error) {
+      console.error("Error fetching branches:", error);
+    }
+  };
+
+  // Use the useEffect hook to fetch branches when the component mounts
+  useEffect(() => {
+    fetchBranches();
+  }, []); // Empty dependency array ensures it only runs once when the component mounts
+
+  // useEffect(() => {
+  //   const intervalId = setInterval(fetchBranches, 1000); // Fetch every 60 seconds (adjust as needed)
+  //   return () => clearInterval(intervalId); // Cleanup on unmount
+  // }, []);
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [branchToEdit, setBranchToEdit] = useState(null);
-  const [branchToDelete, setBranchToDelete] = useState(null);
+  const [branchToEdit, setBranchToEdit] = useState({BranchID:"",BranchName:""});
+  const [branchToDelete, setBranchToDelete] = useState({BranchID:"",BranchName:""});
 
-  const handleDeleteBranch = (branchID) => {
+  const handleDeleteBranch = (branchID:string) => {
     const updatedBranches = branches.filter((branch) => branch.BranchID !== branchID);
     setBranches(updatedBranches);
   };
 
-  const handleEditBranch = (branchID, editedBranchName) => {
+  const handleEditBranch = (branchID:string, editedBranchName:string) => {
     const updatedBranches = branches.map((branch) => {
       if (branch.BranchID === branchID) {
         return { ...branch, BranchName: editedBranchName };
@@ -204,28 +241,27 @@ export default function BranchManagement() {
     setBranches(updatedBranches);
   };
 
-  const handleEditClick = (branch) => {
+  const handleEditClick = (branch: { BranchID: string; BranchName: string; }) => {
     setBranchToEdit(branch);
     setShowEditModal(true);
   };
 
-  const handleDeleteClick = (branch) => {
+  const handleDeleteClick = (branch: { BranchID: string; BranchName: string; }) => {
     setBranchToDelete(branch);
     setShowDeleteModal(true);
   };
 
-  const handleAddBranch = (newBranch) => {
+  const handleAddBranch = (newBranch: { BranchID: string; BranchName: string; }) => {
     setBranches([...branches, newBranch]);
     setShowAddModal(false);
   };
 
   return (
     <main className="bg-white">
-      <Navbar username="Bass" />
       <div className="container p-10">
         <h1 className="text-lg">ระบบจัดการสาขา</h1>
         <button
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-4"
+          className="bg-blue-button hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-4"
           onClick={() => setShowAddModal(true)}
         >
           เพิ่มสาขา
@@ -254,28 +290,28 @@ export default function BranchManagement() {
       </div>
       {showAddModal && (
         <div className="fixed inset-0 flex items-center justify-center z-10 bg-black bg-opacity-50">
-          <BranchInputModal onSubmit={handleAddBranch} onClose={() => setShowAddModal(false)} />
+          <BranchInputModal onSubmit={handleAddBranch} onClose={() => setShowAddModal(false)} />  
         </div>
       )}
       {showEditModal && (
         <div className="fixed inset-0 flex items-center justify-center z-10 bg-black bg-opacity-50">
-          <EditBranchModal
-            branchToEdit={branchToEdit}
-            onSave={handleEditBranch}
-            onClose={() => setShowEditModal(false)}
-          />
+        <EditBranchModal
+          branchToEdit={branchToEdit}
+          onSave={handleEditBranch}
+          onClose={() => setShowEditModal(false)}
+        />
         </div>
       )}
       {showDeleteModal && (
         <div className="fixed inset-0 flex items-center justify-center z-10 bg-black bg-opacity-50">
-          <DeleteBranchModal
-            branch={branchToDelete}
-            onDelete={() => {
-              handleDeleteBranch(branchToDelete.BranchID);
-              setShowDeleteModal(false);
-            }}
-            onClose={() => setShowDeleteModal(false)}
-          />
+        <DeleteBranchModal
+          branch={branchToDelete}
+          onDelete={() => {
+            handleDeleteBranch(branchToDelete.BranchID);
+            setShowDeleteModal(false);
+          }}
+          onClose={() => setShowDeleteModal(false)}
+        />
         </div>
       )}
     </main>
