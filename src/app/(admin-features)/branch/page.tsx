@@ -187,20 +187,38 @@ onClose: () => void;}) {
   );
 }
 
+interface Branch {
+  BranchID: string;
+  BranchName: string;
+}
+
 export default function BranchManagement() {
+  const [branches, setBranches] = useState<Branch[]>([]);
+
+  // Function to fetch branches
+  const fetchBranches = async () => {
+    try {
+      const response = await axios.get("http://localhost:3001/api/branches/");
+      const convertedBranches = response.data.branches.map((branch: { id: string; name: string; }) => {
+        return { BranchID: branch.id, BranchName: branch.name };
+      });
+
+      setBranches(convertedBranches);
+      console.log("Branches fetched successfully!");
+    } catch (error) {
+      console.error("Error fetching branches:", error);
+    }
+  };
+
+  // Use the useEffect hook to fetch branches when the component mounts
   useEffect(() => {
-    const url = "http://localhost:3001/api/branches/"
-    axios.get(url).then((response) => {
-      setBranches(response.data);
-    });
-  }, []); 
-  
-  const [branches, setBranches] = useState([
-    { BranchID: "202001", BranchName: "บรรทัดทอง" },
-    { BranchID: "202002", BranchName: "สามย่าน" },
-    { BranchID: "202003", BranchName: "สยาม" },
-    { BranchID: "202004", BranchName: "บางนา" },
-  ]);
+    fetchBranches();
+  }, []); // Empty dependency array ensures it only runs once when the component mounts
+
+  // useEffect(() => {
+  //   const intervalId = setInterval(fetchBranches, 1000); // Fetch every 60 seconds (adjust as needed)
+  //   return () => clearInterval(intervalId); // Cleanup on unmount
+  // }, []);
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -208,20 +226,41 @@ export default function BranchManagement() {
   const [branchToEdit, setBranchToEdit] = useState({BranchID:"",BranchName:""});
   const [branchToDelete, setBranchToDelete] = useState({BranchID:"",BranchName:""});
 
-  const handleDeleteBranch = (branchID:string) => {
-    const updatedBranches = branches.filter((branch) => branch.BranchID !== branchID);
-    setBranches(updatedBranches);
+  const handleDeleteBranch = async (branchID:string) => {
+    try {
+      await axios.delete(`http://localhost:3001/api/branches/${branchID}`);
+
+      const updatedBranches = branches.filter((branch) => branch.BranchID !== branchID);
+      setBranches(updatedBranches);
+      console.log("Branch deleted successfully!");
+    } catch (error) {
+      console.error("Error deleting branch:", error);
+    }
   };
 
-  const handleEditBranch = (branchID:string, editedBranchName:string) => {
-    const updatedBranches = branches.map((branch) => {
-      if (branch.BranchID === branchID) {
-        return { ...branch, BranchName: editedBranchName };
-      }
-      return branch;
-    });
-    setBranches(updatedBranches);
+  const handleEditBranch = async(branchID:string, editedBranchName:string) => {
+    try {
+      await axios.patch(`http://localhost:3001/api/branches/${branchID}`, {
+        name: editedBranchName,
+        address: "ไม่ทราบ",
+        telNum: "0987911234",
+      });
+
+      const updatedBranches = branches.map((branch) => {
+        if (branch.BranchID === branchID) {
+          return { ...branch, BranchName: editedBranchName };
+        }
+        return branch;
+      });
+
+      setBranches(updatedBranches);
+      console.log("Branch edited successfully!");
+    } catch (error) {
+      console.error("Error editing branch:", error);
+    }
   };
+
+  
 
   const handleEditClick = (branch: { BranchID: string; BranchName: string; }) => {
     setBranchToEdit(branch);
@@ -233,9 +272,20 @@ export default function BranchManagement() {
     setShowDeleteModal(true);
   };
 
-  const handleAddBranch = (newBranch: { BranchID: string; BranchName: string; }) => {
-    setBranches([...branches, newBranch]);
-    setShowAddModal(false);
+  const handleAddBranch = async (newBranch: { BranchID: string; BranchName: string; }) => {
+    try {
+      const response = await axios.post("http://localhost:3001/api/branches", {
+        name: newBranch.BranchName,
+        address: "ไม่ทราบ",
+        telNum: "0987911234",
+      });
+
+      setBranches([...branches, response.data]); // Update the state with the new branch
+      setShowAddModal(false);
+      console.log("New branch added:", response.data);
+    } catch (error) {
+      console.error("Error adding branch:", error);
+    }
   };
 
   return (
