@@ -1,5 +1,7 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from 'react';
+import axios from 'axios';
+
 
 function StaffManagement() {
   const [staff, setStaff] = useState([
@@ -9,6 +11,48 @@ function StaffManagement() {
     { EmployeeID: "1004", Name: "ดิสรณ์ บุตรโส", Branch: "บางนา" },
     { EmployeeID: "1005", Name: "ปริชญา ศิรินันท์อนุกูล", Branch: "บางขุนเทียน" },
   ]);
+
+  // Auth
+  const [token, setToken] = useState('');
+  const authenticateAndGetToken = async () => {
+    try {
+      const response = await axios.post('http://localhost:3001/api/login', {
+        user: 'admin',
+        password: '1234'
+      });
+      if (response.data && response.data.token) {
+        console.log('Authentication successful!');
+        setToken(response.data.token);
+      }
+    } catch (error) {
+      console.error('Authentication Error:', error);
+    }
+  };
+  useEffect(() => {
+    authenticateAndGetToken();
+  }, []);
+
+
+  const fetchStaffData = async () => {
+    try {
+      const response = await axios.get('http://localhost:3003/staffs', {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      setStaff(response.data);
+    } catch (error) {
+      console.error('Error fetching staff data:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (token) {
+      fetchStaffData();
+    }
+  }, [token]);
+
+
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);

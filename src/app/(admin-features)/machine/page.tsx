@@ -1,80 +1,115 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import axios from "axios";
+
+interface Machine {
+  id: string;
+  machineType: string;
+  branchId: string;
+  branchName: string;
+}
+
+const mockMachines: Machine[] = [
+  {
+    id: "1",
+    machineType: "16 kg",
+    branchId: "101",
+    branchName: "Branch A",
+  },
+  {
+    id: "2",
+    machineType: "20 kg",
+    branchId: "102",
+    branchName: "Branch B",
+  },
+  {
+    id: "3",
+    machineType: "16 kg",
+    branchId: "103",
+    branchName: "Branch C",
+  },
+];
 
 export default function MachineManagement() {
-  const [machine, setMachine] = useState([
-    { MachineID: "1", MachineType: "16 kg", Branch: "บรรทัดทอง" },
-    { MachineID: "2", MachineType: "Any", Branch: "สามย่าน" },
-    { MachineID: "3", MachineType: "20 kg", Branch: "สยาม" },
-    { MachineID: "4", MachineType: "16 kg", Branch: "บางนา" },
-  ]);
-
+  const [machine, setMachine] = useState<Machine[]>([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [machineToEdit, setMachineToEdit] = useState({
-    MachineID: "",
-    MachineType: "",
-    Branch: "",
-  });
-  const [machineToDelete, setMachineToDelete] = useState({
-    MachineID: "",
-    MachineType: "",
-    Branch: "",
-  });
-
+  const [machineToEdit, setMachineToEdit] = useState<Machine>({ id: "", machineType: "", branchId: "", branchName: "" });
+  const [machineToDelete, setMachineToDelete] = useState<Machine>({ id: "", machineType: "", branchId: "", branchName: "" });
   const [searchQuery, setSearchQuery] = useState("");
 
-  const handleDeleteMachine = (ID: string) => {
-    const updatedMachine = machine.filter(
-      (specificMachine: {
-        MachineID: string;
-        MachineType: string;
-        Branch: string;
-      }) => specificMachine.MachineID !== ID
-    );
-    setMachine(updatedMachine);
+  useEffect(() => {
+    fetchMachines();
+  }, []);
+
+  const fetchMachines = async () => {
+    try {
+      const response = await axios.get<Machine[]>("http://localhost:3001/api/machines");
+      setMachine(response.data);
+    } catch (error) {
+      console.error("Error fetching machines:", error);
+      // If API request fails, set state to the mock data
+      setMachine(mockMachines);
+    }
   };
 
-  const handleEditMachine = (
-    ID: string,
-    editedName: string,
-    editedBranch: string
-  ) => {
-    const updatedMachine = machine.map((specificMachine) => {
-      if (specificMachine.MachineID === ID) {
-        return { ...specificMachine, Name: editedName, Branch: editedBranch };
-      }
-      return specificMachine;
-    });
-    setMachine(updatedMachine);
+  const handleDeleteMachine = async (machineId: string) => {
+    try {
+      await axios.delete(`http://localhost:3001/api/machines/${machineId}`);
+      const updatedMachines = machine.filter((specificMachine) => specificMachine.id !== machineId);
+      setMachine(updatedMachines);
+      setShowDeleteModal(false);
+    } catch (error) {
+      console.error("Error deleting machine:", error);
+    }
   };
 
-  const handleEditClick = (machine: {
-    MachineID: string;
-    MachineType: string;
-    Branch: string;
-  }) => {
+  const handleEditMachine = async (id: string, editedType: string, editedBranchId: string) => {
+    try {
+      await axios.patch(`http://localhost:3001/api/machines/${id}`, {
+        branchId: editedBranchId,
+        machineType: editedType,
+        status: "working",
+      });
+
+      const updatedMachines = machine.map((specificMachine) => {
+        if (specificMachine.id === id) {
+          return { ...specificMachine, machineType: editedType, branchId: editedBranchId };
+        }
+        return specificMachine;
+      });
+
+      setMachine(updatedMachines);
+      setShowEditModal(false);
+    } catch (error) {
+      console.error("Error editing machine:", error);
+    }
+  };
+
+  const handleEditClick = (machine: Machine) => {
     setMachineToEdit(machine);
     setShowEditModal(true);
   };
 
-  const handleDeleteClick = (machine: {
-    MachineID: string;
-    MachineType: string;
-    Branch: string;
-  }) => {
+  const handleDeleteClick = (machine: Machine) => {
     setMachineToDelete(machine);
     setShowDeleteModal(true);
   };
 
-  const handleAddMachine = (newMachine: {
-    MachineID: string;
-    MachineType: string;
-    Branch: string;
-  }) => {
-    setMachine([...machine, newMachine]);
-    setShowAddModal(false);
+  const handleAddMachine = async (newMachine: Machine) => {
+    try {
+      const response = await axios.post<Machine>("http://localhost:3001/api/machines", {
+        branchId: newMachine.branchId,
+        status: "Available",
+        machineType: newMachine.machineType,
+      });
+
+      setMachine([...machine, response.data]);
+      setShowAddModal(false);
+    } catch (error) {
+      console.error("Error adding machine:", error);
+    }
   };
 
   return (
@@ -88,7 +123,6 @@ export default function MachineManagement() {
           >
             เพิ่มเครื่อง
           </button>
-
           <input
             className="border border-gray-300 p-2 rounded mt-4"
             type="text"
@@ -98,7 +132,7 @@ export default function MachineManagement() {
           />
         </div>
         <table className="mt-4 w-full border-collapse border border-gray-300">
-          <thead>
+        <thead>
             <tr className="bg-gray-200">
               <th className="border border-gray-300 px-4 py-2">หมายเลข</th>
               <th className="border border-gray-300 px-4 py-2 w-2/5">ประเภท</th>
@@ -109,17 +143,17 @@ export default function MachineManagement() {
           </thead>
           <tbody>
             {machine
-              .filter((machine) => machine.Branch.includes(searchQuery))
+              .filter((machine) => machine.branchName.includes(searchQuery))
               .map((machine) => (
-                <tr key={machine.MachineID} className="border border-gray-300">
+                <tr key={machine.id} className="border border-gray-300">
                   <td className="border border-gray-300 px-4 py-2 text-center">
-                    {machine.MachineID}
+                    {machine.id}
                   </td>
                   <td className="border border-gray-300 px-4 py-2 text-center">
-                    {machine.MachineType}
+                    {machine.id}
                   </td>
                   <td className="border border-gray-300 px-4 py-2 text-center">
-                    {machine.Branch}
+                    {machine.branchName}
                   </td>
                   <td className="border border-gray-300 px-4 py-2 text-center">
                     <button
@@ -164,7 +198,7 @@ export default function MachineManagement() {
           <DeleteMachineModal
             machine={machineToDelete}
             onDelete={() => {
-              handleDeleteMachine(machineToDelete.MachineID);
+              handleDeleteMachine(machineToDelete.id);
               setShowDeleteModal(false);
             }}
             onClose={() => setShowDeleteModal(false)}
@@ -175,15 +209,12 @@ export default function MachineManagement() {
   );
 }
 
+// MachineInputModal Component
 function MachineInputModal({
   onSubmit,
   onClose,
 }: {
-  onSubmit: (data: {
-    MachineID: string;
-    MachineType: string;
-    Branch: string;
-  }) => void;
+  onSubmit: (data: Machine) => void;
   onClose: () => void;
 }) {
   const [machineType, setMachineType] = useState("");
@@ -192,9 +223,10 @@ function MachineInputModal({
   const handleSubmit = () => {
     const uniqueMachineID = new Date().getTime().toString();
     onSubmit({
-      MachineID: uniqueMachineID,
-      MachineType: machineType,
-      Branch: machineBranch,
+      id: uniqueMachineID,
+      machineType: machineType,
+      branchId: machineBranch,
+      branchName: machineBranch,
     });
     setMachineType("");
     setMachineBranch("");
@@ -211,19 +243,18 @@ function MachineInputModal({
     <div className="modal fixed inset-0 flex items-center justify-center z-50">
       <div className="modal-content bg-white p-4 w-1/3 rounded-lg shadow-md">
         <div className="modal-header flex justify-between items-center mb-4">
-          <h2 className="text-xl">เพิ่มเครื่อง</h2>
+          <h2 className="text-xl">Add Machine</h2>
           <button className="close-button text-xl" onClick={onClose}>
             &times;
           </button>
         </div>
         <div className="modal-body">
           <label className="block mb-2">
-            ประเภท:
+            Machine Type:
             <select
               className="border border-gray-300 p-2 w-full rounded"
               value={machineType}
-              onChange={(e) => {setMachineType(e.target.value);
-              console.log(e.target.value)}}
+              onChange={(e) => setMachineType(e.target.value)}
             >
               <option value="16 kg">16 kg</option>
               <option value="20 kg">20 kg</option>
@@ -231,7 +262,7 @@ function MachineInputModal({
             </select>
           </label>
           <label className="block mb-2">
-            ประจำที่สาขา:
+            Branch:
             <input
               className="border border-gray-300 p-2 w-full rounded"
               type="text"
@@ -245,13 +276,13 @@ function MachineInputModal({
             className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-700"
             onClick={handleSubmit}
           >
-            เพิ่มเครื่อง
+            Add Machine
           </button>
           <button
             className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-700 ml-2"
             onClick={handleCancel}
           >
-            ยกเลิก
+            Cancel
           </button>
         </div>
       </div>
@@ -259,21 +290,21 @@ function MachineInputModal({
   );
 }
 
+// EditMachineModal Component
 function EditMachineModal({
   machineToEdit,
   onSave,
   onClose,
 }: {
-  machineToEdit: { MachineID: string; MachineType: string; Branch: string };
-  onSave: (MachineID: string, MachineType: string, Branch: string) => void;
+  machineToEdit: Machine;
+  onSave: (id: string, editedType: string, editedBranchId: string) => void;
   onClose: () => void;
 }) {
-  const [editedType, setEditedType] = useState(machineToEdit.MachineType);
-  const [editedBranch, setEditedBranch] = useState(machineToEdit.Branch);
+  const [editedType, setEditedType] = useState(machineToEdit.machineType);
+  const [editedBranch, setEditedBranch] = useState(machineToEdit.branchId);
 
   const handleSaveClick = () => {
-    console.log(editedType)
-    onSave(machineToEdit.MachineID, editedType, editedBranch);
+    onSave(machineToEdit.id, editedType, editedBranch);
     onClose();
   };
 
@@ -285,19 +316,18 @@ function EditMachineModal({
     <div className="modal fixed inset-0 flex items-center justify-center z-50">
       <div className="modal-content bg-white p-4 w-1/3 rounded-lg shadow-md">
         <div className="modal-header flex justify-between items-center mb-4">
-          <h2 className="text-xl">แก้ไขเครื่องซักผ้า</h2>
+          <h2 className="text-xl">Edit Machine</h2>
           <button className="close-button text-xl" onClick={onClose}>
             &times;
           </button>
         </div>
         <div className="modal-body">
           <label className="block mb-2">
-            ประเภท:
+            Machine Type:
             <select
               className="border border-gray-300 p-2 w-full rounded"
               value={editedType}
-              onChange={(e) => {setEditedType(e.target.value);
-                console.log(editedType)}}
+              onChange={(e) => setEditedType(e.target.value)}
             >
               <option value="16 kg">16 kg</option>
               <option value="20 kg">20 kg</option>
@@ -305,7 +335,7 @@ function EditMachineModal({
             </select>
           </label>
           <label className="block mb-2">
-            ประจำที่สาขา:
+            Branch:
             <input
               className="border border-gray-300 p-2 w-full rounded"
               type="text"
@@ -319,13 +349,13 @@ function EditMachineModal({
             className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-700"
             onClick={handleSaveClick}
           >
-            บันทึก
+            Save
           </button>
           <button
             className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-700 ml-2"
             onClick={handleCancel}
           >
-            ยกเลิก
+            Cancel
           </button>
         </div>
       </div>
@@ -333,12 +363,13 @@ function EditMachineModal({
   );
 }
 
+// DeleteMachineModal Component
 function DeleteMachineModal({
   machine,
   onDelete,
   onClose,
 }: {
-  machine: { MachineID: string; MachineType: string; Branch: string };
+  machine: Machine;
   onDelete: () => void;
   onClose: () => void;
 }) {
@@ -346,16 +377,16 @@ function DeleteMachineModal({
     <div className="modal fixed inset-0 flex items-center justify-center z-50">
       <div className="modal-content bg-white p-4 w-1/3 rounded-lg shadow-md">
         <div className="modal-header flex justify-between items-center mb-4">
-          <h2 className="text-xl">ลบเครื่องซักผ้า</h2>
+          <h2 className="text-xl">Delete Machine</h2>
           <button className="close-button text-xl" onClick={onClose}>
             &times;
           </button>
         </div>
         <div className="modal-body">
-          <p>คุณต้องการลบเครื่องซักผ้าด้านล่างนี่ใช่หรือไม่?</p>
-          <p className="font-semibold">หมายเลข: {machine.MachineID}</p>
-          <p className="font-semibold">ประเภท: {machine.MachineType}</p>
-          <p className="font-semibold">ประจำที่สาขา: {machine.Branch}</p>
+          <p>Are you sure you want to delete the following washing machine?</p>
+          <p className="font-semibold">ID: {machine.id}</p>
+          <p className="font-semibold">Type: {machine.machineType}</p>
+          <p className="font-semibold">Branch: {machine.branchName}</p>
         </div>
         <div className="modal-footer">
           <button
@@ -365,13 +396,13 @@ function DeleteMachineModal({
               onClose();
             }}
           >
-            ยืนยัน
+            Confirm
           </button>
           <button
             className="bg-gray-300 text-black px-4 py-2 rounded hover:bg-gray-400 ml-2"
             onClick={onClose}
           >
-            ยกเลิก
+            Cancel
           </button>
         </div>
       </div>

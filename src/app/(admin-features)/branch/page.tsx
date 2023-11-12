@@ -29,22 +29,36 @@ function Branch({ BranchID, BranchName, onDelete, onEdit }:{ BranchID:string, Br
   );
 }
 
-function BranchInputModal({ onSubmit, onClose }:{
-  onSubmit: (data: { BranchID: string; BranchName: string }) => void;
+function BranchInputModal({
+  onSubmit,
+  onClose,
+}: {
+  onSubmit: (data: {
+    BranchName: string;
+    BranchAddress: string;
+    BranchTelNum: string;
+  }) => void;
   onClose: () => void;
 }) {
   const [branchName, setBranchName] = useState("");
+  const [branchAddress, setBranchAddress] = useState("");
+  const [branchTelNum, setBranchTelNum] = useState("");
 
   const handleSubmit = () => {
-    // Generate a unique branch ID
-    const uniqueBranchID = new Date().getTime().toString();
-    onSubmit({ BranchID: uniqueBranchID, BranchName: branchName });
+    // Pass the data back to the parent component
+    onSubmit({
+      BranchName: branchName,
+      BranchAddress: branchAddress,
+      BranchTelNum: branchTelNum,
+    });
     setBranchName("");
-    onClose(); 
+    setBranchAddress("");
+    setBranchTelNum("");
+    onClose();
   };
 
   const handleCancel = () => {
-    onClose(); 
+    onClose();
   };
 
   return (
@@ -64,6 +78,24 @@ function BranchInputModal({ onSubmit, onClose }:{
               type="text"
               value={branchName}
               onChange={(e) => setBranchName(e.target.value)}
+            />
+          </label>
+          <label className="block mb-2">
+            Branch Address:
+            <input
+              className="border border-gray-300 p-2 w-full rounded"
+              type="text"
+              value={branchAddress}
+              onChange={(e) => setBranchAddress(e.target.value)}
+            />
+          </label>
+          <label className="block mb-2">
+            Branch TelNum:
+            <input
+              className="border border-gray-300 p-2 w-full rounded"
+              type="text"
+              value={branchTelNum}
+              onChange={(e) => setBranchTelNum(e.target.value)}
             />
           </label>
         </div>
@@ -86,18 +118,26 @@ function BranchInputModal({ onSubmit, onClose }:{
   );
 }
 
-function EditBranchModal({ branchToEdit, onSave, onClose }:{ branchToEdit: { BranchID: string | null; BranchName: string | null },
-   onSave:(branchID: string, editedBranchName: string) => void,
-   onClose:() => void}) {
+function EditBranchModal({ branchToEdit, onSave, onClose }:{
+  branchToEdit: { BranchID: string | null; BranchName: string | null; },
+  onSave: (branchID: string, editedBranchName: string, editedBranchAddress: string, editedBranchTelNum: string) => void,
+  onClose: () => void;
+}) {
   const [editedBranchName, setEditedBranchName] = useState(branchToEdit.BranchName || "");
+  const [editedBranchAddress, setEditedBranchAddress] = useState("");
+  const [editedBranchTelNum, setEditedBranchTelNum] = useState("");
 
   const handleSaveClick = () => {
     if (branchToEdit.BranchID !== null && editedBranchName !== null) {
-      onSave(branchToEdit.BranchID, editedBranchName);
+      onSave(
+        branchToEdit.BranchID,
+        editedBranchName,
+        editedBranchAddress, 
+        editedBranchTelNum    
+      );
       onClose();
     }
-  }
-  ;
+  };
 
   const handleCancel = () => {
     onClose();
@@ -120,6 +160,24 @@ function EditBranchModal({ branchToEdit, onSave, onClose }:{ branchToEdit: { Bra
               type="text"
               value={editedBranchName}
               onChange={(e) => setEditedBranchName(e.target.value)}
+            />
+          </label>
+          <label className="block mb-2">
+            Branch Address:
+            <input
+              className="border border-gray-300 p-2 w-full rounded"
+              type="text"
+              value={editedBranchAddress}
+              onChange={(e) => setEditedBranchAddress(e.target.value)}
+            />
+          </label>
+          <label className="block mb-2">
+            Branch TelNum:
+            <input
+              className="border border-gray-300 p-2 w-full rounded"
+              type="text"
+              value={editedBranchTelNum}
+              onChange={(e) => setEditedBranchTelNum(e.target.value)}
             />
           </label>
         </div>
@@ -198,22 +256,29 @@ export default function BranchManagement() {
   // Function to fetch branches
   const fetchBranches = async () => {
     try {
-      const response = await axios.get("http://localhost:3001/api/branches/");
-      const convertedBranches = response.data.branches.map((branch: { id: string; name: string; }) => {
+      const accessToken = localStorage.getItem('access_token');
+  
+      const response = await axios.get("http://localhost:3001/api/branches/", {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+  
+      const convertedBranches = response.data.branches.map((branch: { id: string; name: string }) => {
         return { BranchID: branch.id, BranchName: branch.name };
       });
-
+  
       setBranches(convertedBranches);
       console.log("Branches fetched successfully!");
     } catch (error) {
       console.error("Error fetching branches:", error);
     }
   };
+  
 
-  // Use the useEffect hook to fetch branches when the component mounts
   useEffect(() => {
     fetchBranches();
-  }, []); // Empty dependency array ensures it only runs once when the component mounts
+  }, []); // Only run once on initial render
 
   // useEffect(() => {
   //   const intervalId = setInterval(fetchBranches, 1000); // Fetch every 60 seconds (adjust as needed)
@@ -226,29 +291,53 @@ export default function BranchManagement() {
   const [branchToEdit, setBranchToEdit] = useState({BranchID:"",BranchName:""});
   const [branchToDelete, setBranchToDelete] = useState({BranchID:"",BranchName:""});
 
-  const handleDeleteBranch = async (branchID:string) => {
+  const handleDeleteBranch = async (branchID: string) => {
     try {
-      await axios.delete(`http://localhost:3001/api/branches/${branchID}`);
-
-      const updatedBranches = branches.filter((branch) => branch.BranchID !== branchID);
-      setBranches(updatedBranches);
+      const accessToken = localStorage.getItem('access_token');
+      
+      await axios.delete(`http://localhost:3001/api/branches/${branchID}`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+  
+      // const updatedBranches = branches.filter((branch) => branch.BranchID !== branchID);
+      // setBranches(updatedBranches);
       console.log("Branch deleted successfully!");
+      fetchBranches();
     } catch (error) {
       console.error("Error deleting branch:", error);
     }
   };
-
-  const handleEditBranch = async(branchID:string, editedBranchName:string) => {
+  
+  const handleEditBranch = async (
+    branchID: string,
+    editedBranchName: string,
+    editedBranchAddress: string,
+    editedBranchTelNum: string
+  ) => {
     try {
+      console.log("branchID, editedBranchName, editedBranchAddress, editedBranchTelNum");
+      console.log(branchID, editedBranchName, editedBranchAddress, editedBranchTelNum);
+      const accessToken = localStorage.getItem('access_token');
       await axios.patch(`http://localhost:3001/api/branches/${branchID}`, {
         name: editedBranchName,
-        address: "ไม่ทราบ",
-        telNum: "0987911234",
+        address: editedBranchAddress,
+        telNum: editedBranchTelNum,
+      }, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
       });
 
       const updatedBranches = branches.map((branch) => {
         if (branch.BranchID === branchID) {
-          return { ...branch, BranchName: editedBranchName };
+          return {
+            ...branch,
+            BranchName: editedBranchName,
+            BranchAddress: editedBranchAddress,
+            BranchTelNum: editedBranchTelNum,
+          };
         }
         return branch;
       });
@@ -260,29 +349,33 @@ export default function BranchManagement() {
     }
   };
 
-  
-
-  const handleEditClick = (branch: { BranchID: string; BranchName: string; }) => {
+  const handleEditClick = (branch: { BranchID: string; BranchName: string;}) => {
     setBranchToEdit(branch);
     setShowEditModal(true);
   };
-
+  
   const handleDeleteClick = (branch: { BranchID: string; BranchName: string; }) => {
     setBranchToDelete(branch);
     setShowDeleteModal(true);
   };
 
-  const handleAddBranch = async (newBranch: { BranchID: string; BranchName: string; }) => {
+  const handleAddBranch = async (newBranch: { BranchName: string; BranchAddress: string; BranchTelNum: string; }) => {
     try {
-      const response = await axios.post("http://localhost:3001/api/branches", {
+      const accessToken = localStorage.getItem('access_token');
+      const response = await axios.post("http://localhost:3001/api/branches/", {
         name: newBranch.BranchName,
-        address: "ไม่ทราบ",
-        telNum: "0987911234",
+        address: newBranch.BranchAddress,
+        telNum: newBranch.BranchTelNum,
+      }, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
       });
-
-      setBranches([...branches, response.data]); // Update the state with the new branch
+  
+      setBranches([...branches, response.data]);
       setShowAddModal(false);
       console.log("New branch added:", response.data);
+      fetchBranches();
     } catch (error) {
       console.error("Error adding branch:", error);
     }
@@ -327,23 +420,23 @@ export default function BranchManagement() {
       )}
       {showEditModal && (
         <div className="fixed inset-0 flex items-center justify-center z-10 bg-black bg-opacity-50">
-        <EditBranchModal
-          branchToEdit={branchToEdit}
-          onSave={handleEditBranch}
-          onClose={() => setShowEditModal(false)}
-        />
+          <EditBranchModal
+            branchToEdit={branchToEdit}
+            onSave={handleEditBranch}
+            onClose={() => setShowEditModal(false)}
+          />
         </div>
       )}
       {showDeleteModal && (
         <div className="fixed inset-0 flex items-center justify-center z-10 bg-black bg-opacity-50">
-        <DeleteBranchModal
-          branch={branchToDelete}
-          onDelete={() => {
-            handleDeleteBranch(branchToDelete.BranchID);
-            setShowDeleteModal(false);
-          }}
-          onClose={() => setShowDeleteModal(false)}
-        />
+          <DeleteBranchModal
+            branch={branchToDelete}
+            onDelete={() => {
+              handleDeleteBranch(branchToDelete.BranchID);
+              setShowDeleteModal(false);
+            }}
+            onClose={() => setShowDeleteModal(false)}
+          />
         </div>
       )}
     </main>
