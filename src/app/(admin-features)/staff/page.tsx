@@ -3,62 +3,56 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 
 
+interface Staff {
+  EmployeeID: string;
+  FirstName: string;
+  LastName: string;
+  Branch: string;
+}
+
+
+interface ApiStaff {
+  uid: string;
+  branchID: string;
+  fName: string;
+  lName: string;
+}
+
 function StaffManagement() {
-  const [staff, setStaff] = useState([
-    { EmployeeID: "1001", Name: "ณภัทร ดรุนัยธร", Branch: "บรรทัดทอง" },
-    { EmployeeID: "1002", Name: "พลวุฒิ ขำโขนงาม", Branch: "สามย่าน" },
-    { EmployeeID: "1003", Name: "กาญจนี สถิตรังสีวงศ", Branch: "สยาม" },
-    { EmployeeID: "1004", Name: "ดิสรณ์ บุตรโส", Branch: "บางนา" },
-    { EmployeeID: "1005", Name: "ปริชญา ศิรินันท์อนุกูล", Branch: "บางขุนเทียน" },
-  ]);
-
-  // Auth
-  const [token, setToken] = useState('');
-  const authenticateAndGetToken = async () => {
-    try {
-      const response = await axios.post('http://localhost:3001/api/login', {
-        user: 'admin',
-        password: '1234'
-      });
-      if (response.data && response.data.token) {
-        console.log('Authentication successful!');
-        setToken(response.data.token);
-      }
-    } catch (error) {
-      console.error('Authentication Error:', error);
-    }
-  };
-  useEffect(() => {
-    authenticateAndGetToken();
-  }, []);
-
+  const [staff, setStaff] = useState<Staff[]>([]);
 
   const fetchStaffData = async () => {
     try {
-      const response = await axios.get('http://localhost:3003/staffs', {
+      const accessToken = localStorage.getItem('access_token');
+      const response = await axios.get('http://localhost:3001/api/staffs', {
         headers: {
-          Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${accessToken}`
         }
       });
-      setStaff(response.data);
+
+
+      setStaff(response.data.map((apiStaff: ApiStaff) => ({
+        EmployeeID: apiStaff.uid,
+        FirstName: apiStaff.fName,
+        LastName: apiStaff.lName,
+        Branch: apiStaff.branchID
+      })));
+      
     } catch (error) {
       console.error('Error fetching staff data:', error);
     }
   };
 
   useEffect(() => {
-    if (token) {
-      fetchStaffData();
-    }
-  }, [token]);
-
+    fetchStaffData();
+  }, []);
 
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [staffToEdit, setStaffToEdit] = useState({ EmployeeID: "", Name: "", Branch: "" });
-  const [staffToDelete, setStaffToDelete] = useState({ EmployeeID: "", Name: "", Branch: "" });
+  const [staffToEdit, setStaffToEdit] = useState({ EmployeeID: "", FirstName: "", LastName: "", Branch: "" });
+  const [staffToDelete, setStaffToDelete] = useState({ EmployeeID: "", FirstName: "", LastName: "", Branch: "" });
 
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -67,27 +61,28 @@ function StaffManagement() {
     setStaff(updatedStaff);
   };
 
-  const handleEditStaff = (employeeID:string, editedName:string, editedBranch:string) => {
+  const handleEditStaff = (employeeID: string, editedFirstName: string, editedLastName: string, editedBranch: string) => {
     const updatedStaff = staff.map((employee) => {
       if (employee.EmployeeID === employeeID) {
-        return { ...employee, Name: editedName, Branch: editedBranch };
+        return { ...employee, FirstName: editedFirstName, LastName: editedLastName, Branch: editedBranch };
       }
       return employee;
     });
     setStaff(updatedStaff);
   };
+  
 
-  const handleEditClick = (employee:{ EmployeeID:string, Name: string, Branch: string }) => {
-    setStaffToEdit(employee);
+  const handleEditClick = (staff:Staff) => {
+    setStaffToEdit(staff);
     setShowEditModal(true);
   };
 
-  const handleDeleteClick = (employee:{ EmployeeID:string, Name: string, Branch: string }) => {
+  const handleDeleteClick = (employee:{ EmployeeID:string, FirstName: string, LastName: string, Branch: string }) => {
     setStaffToDelete(employee);
     setShowDeleteModal(true);
   };
 
-  const handleAddStaff = (newStaff:{ EmployeeID:string, Name: string, Branch: string }) => {
+  const handleAddStaff = (newStaff:{ EmployeeID:string, FirstName: string, LastName: string, Branch: string }) => {
     setStaff([...staff, newStaff]);
     setShowAddModal(false);
   };
@@ -113,42 +108,44 @@ function StaffManagement() {
             />
         </div>
         <table className="mt-4 w-full border-collapse border border-gray-300">
-          <thead>
-            <tr className="bg-gray-200">
-              <th className="border border-gray-300 px-4 py-2">รหัสพนักงาน</th>
-              <th className="border border-gray-300 px-4 py-2 w-2/5">ชื่อนามสกุล</th>
-              <th className="border border-gray-300 px-4 py-2">ประจำที่สาขา</th>
-              <th className="border border-gray-300 px-4 py-2"></th>
-              <th className="border border-gray-300 px-4 py-2"></th>
-            </tr>
-          </thead>
+        <thead>
+          <tr className="bg-gray-200">
+            <th className="border border-gray-300 px-4 py-2">รหัสพนักงาน</th>
+            <th className="border border-gray-300 px-4 py-2 w-2/5">ชื่อ</th>
+            <th className="border border-gray-300 px-4 py-2">นามสกุล</th>
+            <th className="border border-gray-300 px-4 py-2">ประจำที่สาขา</th>
+            <th className="border border-gray-300 px-4 py-2"></th>
+            <th className="border border-gray-300 px-4 py-2"></th>
+          </tr>
+        </thead>
           <tbody>
-            {staff
-              .filter((employee) =>
-                employee.Branch.includes(searchQuery))
-              .map((employee) => (
-                <tr key={employee.EmployeeID} className="border border-gray-300">
-                  <td className="border border-gray-300 px-4 py-2 text-center">{employee.EmployeeID}</td>
-                  <td className="border border-gray-300 px-4 py-2 text-center">{employee.Name}</td>
-                  <td className="border border-gray-300 px-4 py-2 text-center">{employee.Branch}</td>
-                  <td className="border border-gray-300 px-4 py-2 text-center">
-                    <button
-                      className="bg-blue-button hover:bg-blue-700 text-white font-bold py-1 px-2 rounded"
-                      onClick={() => handleEditClick(employee)}
-                    >
-                      แก้ไข
-                    </button>
-                  </td>
-                  <td className="border border-gray-300 px-4 py-2 text-center">
-                    <button
-                      className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded"
-                      onClick={() => handleDeleteClick(employee)}
-                    >
-                      ลบ
-                    </button>
-                  </td>
-                </tr>
-              ))}
+          {staff
+            .filter((employee) =>
+              employee.Branch.includes(searchQuery))
+            .map((employee) => (
+              <tr key={employee.EmployeeID} className="border border-gray-300">
+                <td className="border border-gray-300 px-4 py-2 text-center">{employee.EmployeeID}</td>
+                <td className="border border-gray-300 px-4 py-2 text-center">{employee.FirstName}</td>
+                <td className="border border-gray-300 px-4 py-2 text-center">{employee.LastName}</td>
+                <td className="border border-gray-300 px-4 py-2 text-center">{employee.Branch}</td>
+                <td className="border border-gray-300 px-4 py-2 text-center">
+                  <button
+                    className="bg-blue-button hover:bg-blue-700 text-white font-bold py-1 px-2 rounded"
+                    onClick={() => handleEditClick(employee)}
+                  >
+                    แก้ไข
+                  </button>
+                </td>
+                <td className="border border-gray-300 px-4 py-2 text-center">
+                  <button
+                    className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded"
+                    onClick={() => handleDeleteClick(employee)}
+                  >
+                    ลบ
+                  </button>
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
@@ -182,21 +179,30 @@ function StaffManagement() {
   );
 }
 
-function StaffInputModal({ onSubmit, onClose }:{onSubmit: (data: { EmployeeID: string, Name: string, Branch:string }) => void,
-  onClose:() => void}) {
-  const [employeeName, setEmployeeName] = useState("");
+function StaffInputModal({ onSubmit, onClose }:
+  { onSubmit: (data: { EmployeeID: string, FirstName: string, LastName: string, Branch: string }) => void,
+    onClose: () => void }) {
+  const [employeeFirstName, setEmployeeFirstName] = useState("");
+  const [employeeLastName, setEmployeeLastName] = useState("");
   const [employeeBranch, setEmployeeBranch] = useState("");
 
   const handleSubmit = () => {
     const uniqueEmployeeID = new Date().getTime().toString();
-    onSubmit({ EmployeeID: uniqueEmployeeID, Name: employeeName, Branch: employeeBranch });
-    setEmployeeName("");
+    onSubmit({
+      EmployeeID: uniqueEmployeeID,
+      FirstName: employeeFirstName,
+      LastName: employeeLastName,
+      Branch: employeeBranch,
+    });
+    setEmployeeFirstName("");
+    setEmployeeLastName("");
     setEmployeeBranch("");
     onClose();
   };
 
   const handleCancel = () => {
-    setEmployeeName("");
+    setEmployeeFirstName("");
+    setEmployeeLastName("");
     setEmployeeBranch("");
     onClose();
   };
@@ -212,12 +218,21 @@ function StaffInputModal({ onSubmit, onClose }:{onSubmit: (data: { EmployeeID: s
         </div>
         <div className="modal-body">
           <label className="block mb-2">
-            ชื่อนามสกุล:
+            ชื่อ:
             <input
               className="border border-gray-300 p-2 w-full rounded"
               type="text"
-              value={employeeName}
-              onChange={(e) => setEmployeeName(e.target.value)}
+              value={employeeFirstName}
+              onChange={(e) => setEmployeeFirstName(e.target.value)}
+            />
+          </label>
+          <label className="block mb-2">
+            นามสกุล:
+            <input
+              className="border border-gray-300 p-2 w-full rounded"
+              type="text"
+              value={employeeLastName}
+              onChange={(e) => setEmployeeLastName(e.target.value)}
             />
           </label>
           <label className="block mb-2">
@@ -249,15 +264,17 @@ function StaffInputModal({ onSubmit, onClose }:{onSubmit: (data: { EmployeeID: s
   );
 }
 
+
 function EditStaffModal({ staffToEdit, onSave, onClose }:
-  { staffToEdit:{ EmployeeID: string, Name: string, Branch: string },
-    onSave:(EmployeeID: string, Name: string, Branch: string) => void,
-    onClose: () => void}) {
-  const [editedName, setEditedName] = useState(staffToEdit.Name);
+  { staffToEdit: { EmployeeID: string, FirstName: string, LastName: string, Branch: string },
+    onSave: (employeeID: string, editedFirstName: string, editedLastName: string, editedBranch: string) => void,
+    onClose: () => void }) {
+  const [editedFirstName, setEditedFirstName] = useState(staffToEdit.FirstName);
+  const [editedLastName, setEditedLastName] = useState(staffToEdit.LastName);
   const [editedBranch, setEditedBranch] = useState(staffToEdit.Branch);
 
   const handleSaveClick = () => {
-    onSave(staffToEdit.EmployeeID, editedName, editedBranch);
+    onSave(staffToEdit.EmployeeID, editedFirstName, editedLastName, editedBranch);
     onClose();
   };
 
@@ -276,12 +293,21 @@ function EditStaffModal({ staffToEdit, onSave, onClose }:
         </div>
         <div className="modal-body">
           <label className="block mb-2">
-            ชื่อนามสกุล:
+            ชื่อ:
             <input
               className="border border-gray-300 p-2 w-full rounded"
               type="text"
-              value={editedName}
-              onChange={(e) => setEditedName(e.target.value)}
+              value={editedFirstName}
+              onChange={(e) => setEditedFirstName(e.target.value)}
+            />
+          </label>
+          <label className="block mb-2">
+            นามสกุล:
+            <input
+              className="border border-gray-300 p-2 w-full rounded"
+              type="text"
+              value={editedLastName}
+              onChange={(e) => setEditedLastName(e.target.value)}
             />
           </label>
           <label className="block mb-2">
@@ -313,8 +339,9 @@ function EditStaffModal({ staffToEdit, onSave, onClose }:
   );
 }
 
+
 function DeleteStaffModal({ staff, onDelete, onClose }:
-  { staff:{ EmployeeID: string, Name: string, Branch: string },
+  { staff:{ EmployeeID: string, FirstName: string, LastName: string, Branch: string },
     onDelete:() => void,
     onClose:() => void }
   ) {
@@ -330,7 +357,8 @@ function DeleteStaffModal({ staff, onDelete, onClose }:
         <div className="modal-body">
           <p>คุณต้องการลบพนักงานดังต่อไปนี้หรือไม่?</p>
           <p className="font-semibold">รหัสพนักงาน: {staff.EmployeeID}</p>
-          <p className="font-semibold">ชื่อนามสกุล: {staff.Name}</p>
+          <p className="font-semibold">ชื่อ: {staff.FirstName}</p>
+          <p className="font-semibold">นามสกุล: {staff.LastName}</p>
           <p className="font-semibold">ประจำที่สาขา: {staff.Branch}</p>
         </div>
         <div className="modal-footer">
@@ -354,5 +382,6 @@ function DeleteStaffModal({ staff, onDelete, onClose }:
     </div>
   );
 }
+
 
 export default StaffManagement;
