@@ -93,35 +93,28 @@ export default function MachineManagement() {
         }
       });
 
-      const updatedMachines = machine.filter((specificMachine) => specificMachine.id !== machineId);
-      setMachine(updatedMachines);
+      fetchMachines();
       setShowDeleteModal(false);
     } catch (error) {
       console.error("Error deleting machine:", error);
     }
   };
 
-  const handleEditMachine = async (id: string, editedType: string, editedBranchId: string) => {
+  const handleEditMachine = async (id: string, editedBranchId: string) => {
     try {
       const accessToken = localStorage.getItem('access_token');
-      await axios.patch(`http://localhost:3001/api/machines/${id}`, {
+  
+      const requestBody = {
         branchId: editedBranchId,
-        machineType: editedType,
-        status: "working",
-      }, {
+      };
+
+      await axios.patch(`http://localhost:3001/api/machines/${id}`, requestBody, {
         headers: {
           Authorization: `Bearer ${accessToken}`
         }
       });
-
-      const updatedMachines = machine.map((specificMachine) => {
-        if (specificMachine.id === id) {
-          return { ...specificMachine, machineType: editedType, branchId: editedBranchId };
-        }
-        return specificMachine;
-      });
-
-      setMachine(updatedMachines);
+  
+      fetchMachines();
       setShowEditModal(false);
     } catch (error) {
       console.error("Error editing machine:", error);
@@ -275,24 +268,20 @@ function MachineInputModal({
 
   const handleSubmit = () => {
     const uniqueMachineID = new Date().getTime().toString();
-    
-    // Check if machineType is empty, set default to "16 kg"
-    const submittedMachineType = machineType.trim() === "" ? "16 kg" : machineType.trim();
-
     onSubmit({
       id: uniqueMachineID,
-      machineType: submittedMachineType,
+      machineType: machineType,
       branchId: machineBranch,
       branchName: machineBranch,
     });
-    setMachineType(""); // Reset to the default value after submission
-    setMachineBranch(branches.length > 0 ? branches[0].id : "");
+    setMachineType("");
+    setMachineBranch(branches.length > 0 ? branches[0].id : ""); // Reset to the ID of the first branch
     onClose();
   };
 
   const handleCancel = () => {
-    setMachineType(""); // Reset to the default value on cancel
-    setMachineBranch(branches.length > 0 ? branches[0].id : "");
+    setMachineType("");
+    setMachineBranch(branches.length > 0 ? branches[0].id : ""); // Reset to the ID of the first branch
     onClose();
   };
 
@@ -359,14 +348,33 @@ function EditMachineModal({
   onClose,
 }: {
   machineToEdit: Machine;
-  onSave: (id: string, editedType: string, editedBranchId: string) => void;
+  onSave: (id: string, editedBranchId: string) => void;
   onClose: () => void;
 }) {
-  const [editedType, setEditedType] = useState(machineToEdit.machineType);
   const [editedBranch, setEditedBranch] = useState(machineToEdit.branchId);
+  const [branches, setBranches] = useState<Branch[]>([]);
+
+  useEffect(() => {
+    fetchBranches();
+  }, []);
+
+  const fetchBranches = async () => {
+    try {
+      const accessToken = localStorage.getItem('access_token');
+      const response = await axios.get<{ branches: Branch[] }>('http://localhost:3001/api/branches', {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+  
+      setBranches(response.data.branches);
+    } catch (error) {
+      console.error('Error fetching branches:', error);
+    }
+  };
 
   const handleSaveClick = () => {
-    onSave(machineToEdit.id, editedType, editedBranch);
+    onSave(machineToEdit.id, editedBranch);
     onClose();
   };
 
@@ -385,25 +393,18 @@ function EditMachineModal({
         </div>
         <div className="modal-body">
           <label className="block mb-2">
-            Machine Type:
+            Branch:
             <select
               className="border border-gray-300 p-2 w-full rounded"
-              value={editedType}
-              onChange={(e) => setEditedType(e.target.value)}
-            >
-              <option value="16 kg">16 kg</option>
-              <option value="20 kg">20 kg</option>
-              <option value="Any">Any</option>
-            </select>
-          </label>
-          <label className="block mb-2">
-            Branch:
-            <input
-              className="border border-gray-300 p-2 w-full rounded"
-              type="text"
               value={editedBranch}
               onChange={(e) => setEditedBranch(e.target.value)}
-            />
+            >
+              {branches.map((branch: Branch) => (
+                <option key={branch.id} value={branch.id}>
+                  {branch.name}
+                </option>
+              ))}
+            </select>
           </label>
         </div>
         <div className="modal-footer">
@@ -424,6 +425,8 @@ function EditMachineModal({
     </div>
   );
 }
+
+
 
 // DeleteMachineModal Component
 function DeleteMachineModal({
