@@ -13,7 +13,7 @@ interface Staff {
 
 interface ApiStaff {
   uid: string;
-  branchID: string;
+  branchId: string;
   fName: string;
   lName: string;
 }
@@ -30,14 +30,16 @@ function StaffManagement() {
         }
       });
 
-
-      setStaff(response.data.map((apiStaff: ApiStaff) => ({
+      setStaff(response.data.map((apiStaff: ApiStaff) => (
+        {
         EmployeeID: apiStaff.uid,
         FirstName: apiStaff.fName,
         LastName: apiStaff.lName,
-        Branch: apiStaff.branchID
+        Branch: apiStaff.branchId
       })));
       
+
+      console.log("data fetched successfully")
     } catch (error) {
       console.error('Error fetching staff data:', error);
     }
@@ -62,15 +64,15 @@ function StaffManagement() {
   };
 
   const handleEditStaff = (employeeID: string, editedFirstName: string, editedLastName: string, editedBranch: string) => {
-    const updatedStaff = staff.map((employee) => {
-      if (employee.EmployeeID === employeeID) {
-        return { ...employee, FirstName: editedFirstName, LastName: editedLastName, Branch: editedBranch };
-      }
-      return employee;
-    });
-    setStaff(updatedStaff);
+  const updatedStaff = staff.map((employee) => {
+    if (employee.EmployeeID === employeeID) {
+      return { ...employee, FirstName: editedFirstName, LastName: editedLastName, Branch: editedBranch };
+    }
+    return employee;
+  });
+  setStaff(updatedStaff);
   };
-  
+
 
   const handleEditClick = (staff:Staff) => {
     setStaffToEdit(staff);
@@ -82,8 +84,39 @@ function StaffManagement() {
     setShowDeleteModal(true);
   };
 
-  const handleAddStaff = (newStaff:{ EmployeeID:string, FirstName: string, LastName: string, Branch: string }) => {
-    setStaff([...staff, newStaff]);
+  const addStaffApi = async (newStaff: {
+    branchId: string;
+    fName: string;
+    lName: string;
+    username: string;
+    password: string;
+  }) => {
+    try {
+      const accessToken = localStorage.getItem('access_token');
+      const response = await axios.post('http://localhost:3001/api/staffs', newStaff, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      console.log('Staff added successfully:', response.data);
+
+      fetchStaffData();
+    } catch (error) {
+      console.error('Error adding staff:', error);
+    }
+  };
+
+  const handleAddStaff = (newStaff: {
+    fName: string;
+    lName: string;
+    branchId: string;
+    username: string;
+    password: string;
+  }) => {
+    // Call the addStaffApi function with the mapped data
+    addStaffApi(newStaff);
+  
     setShowAddModal(false);
   };
 
@@ -120,14 +153,13 @@ function StaffManagement() {
         </thead>
           <tbody>
           {staff
-            .filter((employee) =>
-              employee.Branch.includes(searchQuery))
+            .filter((employee) => employee.Branch && employee.Branch.includes(searchQuery))
             .map((employee) => (
               <tr key={employee.EmployeeID} className="border border-gray-300">
                 <td className="border border-gray-300 px-4 py-2 text-center">{employee.EmployeeID}</td>
                 <td className="border border-gray-300 px-4 py-2 text-center">{employee.FirstName}</td>
                 <td className="border border-gray-300 px-4 py-2 text-center">{employee.LastName}</td>
-                <td className="border border-gray-300 px-4 py-2 text-center">{employee.Branch}</td>
+                <td className="border border-gray-300 px-4 py-2 text-center">{employee.Branch || "N/A"}</td>
                 <td className="border border-gray-300 px-4 py-2 text-center">
                   <button
                     className="bg-blue-button hover:bg-blue-700 text-white font-bold py-1 px-2 rounded"
@@ -179,31 +211,49 @@ function StaffManagement() {
   );
 }
 
-function StaffInputModal({ onSubmit, onClose }:
-  { onSubmit: (data: { EmployeeID: string, FirstName: string, LastName: string, Branch: string }) => void,
-    onClose: () => void }) {
-  const [employeeFirstName, setEmployeeFirstName] = useState("");
-  const [employeeLastName, setEmployeeLastName] = useState("");
-  const [employeeBranch, setEmployeeBranch] = useState("");
+function StaffInputModal({
+  onSubmit,
+  onClose,
+}: {
+  onSubmit: (newStaff: {
+    branchId: string;
+    fName: string;
+    lName: string;
+    username: string;
+    password: string;
+  }) => void;
+  onClose: () => void;
+}) {
+  const [employeeFirstName, setEmployeeFirstName] = useState('');
+  const [employeeLastName, setEmployeeLastName] = useState('');
+  const [employeeBranch, setEmployeeBranch] = useState('');
+  const [username, setUsername] = useState(''); // new state for username
+  const [password, setPassword] = useState(''); // new state for password
 
   const handleSubmit = () => {
-    const uniqueEmployeeID = new Date().getTime().toString();
     onSubmit({
-      EmployeeID: uniqueEmployeeID,
-      FirstName: employeeFirstName,
-      LastName: employeeLastName,
-      Branch: employeeBranch,
+      fName: employeeFirstName,
+      lName: employeeLastName,
+      branchId: employeeBranch,
+      username: username, // use the username state
+      password: password, // use the password state
     });
-    setEmployeeFirstName("");
-    setEmployeeLastName("");
-    setEmployeeBranch("");
+    // Reset all states
+    setEmployeeFirstName('');
+    setEmployeeLastName('');
+    setEmployeeBranch('');
+    setUsername('');
+    setPassword('');
     onClose();
   };
 
   const handleCancel = () => {
-    setEmployeeFirstName("");
-    setEmployeeLastName("");
-    setEmployeeBranch("");
+    // Reset all states
+    setEmployeeFirstName('');
+    setEmployeeLastName('');
+    setEmployeeBranch('');
+    setUsername('');
+    setPassword('');
     onClose();
   };
 
@@ -242,6 +292,24 @@ function StaffInputModal({ onSubmit, onClose }:
               type="text"
               value={employeeBranch}
               onChange={(e) => setEmployeeBranch(e.target.value)}
+            />
+          </label>
+          <label className="block mb-2">
+            ชื่อผู้ใช้ (Username):
+            <input
+              className="border border-gray-300 p-2 w-full rounded"
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+            />
+          </label>
+          <label className="block mb-2">
+            รหัสผ่าน (Password):
+            <input
+              className="border border-gray-300 p-2 w-full rounded"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
             />
           </label>
         </div>
