@@ -463,7 +463,6 @@ function EditStaffModal({
   const handleCancel = () => {
     onClose();
   };
-  
   return (
     <div className="modal fixed inset-0 flex items-center justify-center z-50">
       <div className="modal-content bg-white p-4 w-1/3 rounded-lg shadow-md">
@@ -530,11 +529,31 @@ function EditStaffModal({
 }
 
 
-function DeleteStaffModal({ staff, onDelete, onClose }:
-  { staff:{ EmployeeID: string, FirstName: string, LastName: string, Branch: string },
-    onDelete:() => void,
-    onClose:() => void }
-  ) {
+function DeleteStaffModal({
+  staff,
+  onDelete,
+  onClose
+}: {
+  staff: { EmployeeID: string; FirstName: string; LastName: string; Branch: string };
+  onDelete: () => void;
+  onClose: () => void;
+}) {
+  const handleDelete = async () => {
+    try {
+      const accessToken = localStorage.getItem('access_token');
+      await axios.delete(`http://localhost:3001/api/staffs/${staff.EmployeeID}`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`
+        }
+      });
+
+      onDelete(); // Update the state or perform any necessary actions after deletion
+    } catch (error) {
+      console.error('Error deleting staff:', error);
+      // Handle errors, e.g., show an error message to the user
+    }
+  };
+
   return (
     <div className="modal fixed inset-0 flex items-center justify-center z-50">
       <div className="modal-content bg-white p-4 w-1/3 rounded-lg shadow-md">
@@ -555,7 +574,7 @@ function DeleteStaffModal({ staff, onDelete, onClose }:
           <button
             className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-700"
             onClick={() => {
-              onDelete();
+              handleDelete();
               onClose();
             }}
           >
@@ -572,6 +591,7 @@ function DeleteStaffModal({ staff, onDelete, onClose }:
     </div>
   );
 }
+
 
 
 export default StaffManagement;
