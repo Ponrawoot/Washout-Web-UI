@@ -18,8 +18,17 @@ interface ApiStaff {
   lName: string;
 }
 
+interface Branch {
+  id: string;
+  name: string;
+  address: string;
+  telNum: string;
+}
+
 function StaffManagement() {
   const [staff, setStaff] = useState<Staff[]>([]);
+  const [branches, setBranches] = useState<Branch[]>([]);
+  const [selectedBranch, setSelectedBranch] = useState<string>('');
 
   const fetchStaffData = async () => {
     try {
@@ -44,6 +53,25 @@ function StaffManagement() {
       console.error('Error fetching staff data:', error);
     }
   };
+
+  useEffect(() => {
+    const fetchBranches = async () => {
+      try {
+        const accessToken = localStorage.getItem('access_token');
+        const response = await axios.get('http://localhost:3001/api/branches', {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+  
+        setBranches(response.data.branches);
+      } catch (error) {
+        console.error('Error fetching branches:', error);
+      }
+    };
+  
+    fetchBranches();
+  }, []);
 
   useEffect(() => {
     fetchStaffData();
@@ -98,14 +126,22 @@ function StaffManagement() {
           Authorization: `Bearer ${accessToken}`,
         },
       });
-
+  
       console.log('Staff added successfully:', response.data);
-
-      fetchStaffData();
+  
+      // Check if the response contains a error message or any other indication
+      if (response.data.message === 'Error') {
+        console.log('Error adding staff username must be unique');
+        alert('Error adding staff username must be unique')
+      } else {
+        fetchStaffData();
+      }
     } catch (error) {
+      // Handle other errors, e.g., network issues
       console.error('Error adding staff:', error);
     }
   };
+  
 
   const handleAddStaff = (newStaff: {
     fName: string;
@@ -183,7 +219,13 @@ function StaffManagement() {
       </div>
       {showAddModal && (
         <div className="fixed inset-0 flex items-center justify-center z-10 bg-black bg-opacity-50">
-        <StaffInputModal onSubmit={handleAddStaff} onClose={() => setShowAddModal(false)} />
+          <StaffInputModal
+            onSubmit={handleAddStaff}
+            onClose={() => setShowAddModal(false)}
+            selectedBranch={selectedBranch}
+            setSelectedBranch={setSelectedBranch}
+            branches={branches}
+          />
         </div>
       )}
       {showEditModal && (
@@ -214,6 +256,9 @@ function StaffManagement() {
 function StaffInputModal({
   onSubmit,
   onClose,
+  selectedBranch,
+  setSelectedBranch,
+  branches, // Add branches as a prop
 }: {
   onSubmit: (newStaff: {
     branchId: string;
@@ -223,6 +268,9 @@ function StaffInputModal({
     password: string;
   }) => void;
   onClose: () => void;
+  selectedBranch: string;
+  setSelectedBranch: (branch: string) => void;
+  branches: Branch[]; // Define branches as a prop
 }) {
   const [employeeFirstName, setEmployeeFirstName] = useState('');
   const [employeeLastName, setEmployeeLastName] = useState('');
@@ -234,9 +282,9 @@ function StaffInputModal({
     onSubmit({
       fName: employeeFirstName,
       lName: employeeLastName,
-      branchId: employeeBranch,
-      username: username, // use the username state
-      password: password, // use the password state
+      branchId: selectedBranch,  // Pass selectedBranch instead of employeeBranch
+      username: username,
+      password: password,
     });
     // Reset all states
     setEmployeeFirstName('');
@@ -285,7 +333,7 @@ function StaffInputModal({
               onChange={(e) => setEmployeeLastName(e.target.value)}
             />
           </label>
-          <label className="block mb-2">
+          {/* <label className="block mb-2">
             ประจำที่สาขา:
             <input
               className="border border-gray-300 p-2 w-full rounded"
@@ -293,7 +341,25 @@ function StaffInputModal({
               value={employeeBranch}
               onChange={(e) => setEmployeeBranch(e.target.value)}
             />
+          </label> */}
+          <label className="block mb-2">
+            ประจำที่สาขา:
+            <select
+              className="border border-gray-300 p-2 w-full rounded"
+              value={selectedBranch}
+              onChange={(e) => setSelectedBranch(e.target.value)}
+            >
+              <option value="" disabled>
+                เลือกสาขา
+              </option>
+              {branches.map((branch:Branch) => (
+                <option key={branch.id} value={branch.id}>
+                  {branch.name}
+                </option>
+              ))}
+            </select>
           </label>
+
           <label className="block mb-2">
             ชื่อผู้ใช้ (Username):
             <input
