@@ -6,7 +6,14 @@ interface Machine {
   id: string;
   machineType: string;
   branchId: string;
-  branchName: string;
+branchName: string;
+}
+
+interface Branch {
+  id: string;
+  name: string;
+  address: string;
+  telNum: string;
 }
 
 const mockMachines: Machine[] = [
@@ -14,13 +21,13 @@ const mockMachines: Machine[] = [
     id: "1",
     machineType: "16 kg",
     branchId: "101",
-    branchName: "Branch A",
+branchName: "Branch A",
   },
   {
     id: "2",
     machineType: "20 kg",
     branchId: "102",
-    branchName: "Branch B",
+branchName: "Branch B",
   },
   {
     id: "3",
@@ -38,15 +45,23 @@ export default function MachineManagement() {
   const [machineToEdit, setMachineToEdit] = useState<Machine>({ id: "", machineType: "", branchId: "", branchName: "" });
   const [machineToDelete, setMachineToDelete] = useState<Machine>({ id: "", machineType: "", branchId: "", branchName: "" });
   const [searchQuery, setSearchQuery] = useState("");
+  const [branches, setBranches] = useState<Branch[]>([]);
 
   useEffect(() => {
     fetchMachines();
+    fetchBranches();
   }, []);
 
   const fetchMachines = async () => {
     try {
-      const response = await axios.get<Machine[]>("http://localhost:3001/api/machines");
+      const accessToken = localStorage.getItem('access_token');
+      const response = await axios.get<Machine[]>("http://localhost:3001/api/machines", {
+        headers: {
+          Authorization: `Bearer ${accessToken}`
+        }
+      });
       setMachine(response.data);
+      console.log("data fetched successfully")
     } catch (error) {
       console.error("Error fetching machines:", error);
       // If API request fails, set state to the mock data
@@ -54,9 +69,30 @@ export default function MachineManagement() {
     }
   };
 
+  const fetchBranches = async () => {
+    try {
+      const accessToken = localStorage.getItem('access_token');
+      const response = await axios.get<{ branches: Branch[] }>('http://localhost:3001/api/branches', {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+  
+      setBranches(response.data.branches);
+    } catch (error) {
+      console.error('Error fetching branches:', error);
+    }
+  };
+
   const handleDeleteMachine = async (machineId: string) => {
     try {
-      await axios.delete(`http://localhost:3001/api/machines/${machineId}`);
+      const accessToken = localStorage.getItem('access_token');
+      await axios.delete(`http://localhost:3001/api/machines/${machineId}`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`
+        }
+      });
+
       const updatedMachines = machine.filter((specificMachine) => specificMachine.id !== machineId);
       setMachine(updatedMachines);
       setShowDeleteModal(false);
@@ -67,10 +103,15 @@ export default function MachineManagement() {
 
   const handleEditMachine = async (id: string, editedType: string, editedBranchId: string) => {
     try {
+      const accessToken = localStorage.getItem('access_token');
       await axios.patch(`http://localhost:3001/api/machines/${id}`, {
         branchId: editedBranchId,
         machineType: editedType,
         status: "working",
+      }, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`
+        }
       });
 
       const updatedMachines = machine.map((specificMachine) => {
@@ -98,18 +139,27 @@ export default function MachineManagement() {
   };
 
   const handleAddMachine = async (newMachine: Machine) => {
-    try {
-      const response = await axios.post<Machine>("http://localhost:3001/api/machines", {
-        branchId: newMachine.branchId,
-        status: "Available",
-        machineType: newMachine.machineType,
-      });
+  try {
 
-      setMachine([...machine, response.data]);
-      setShowAddModal(false);
-    } catch (error) {
-      console.error("Error adding machine:", error);
-    }
+    const accessToken = localStorage.getItem('access_token');
+
+    console.log("New machine type:", newMachine.machineType); // Debug
+    console.log("New machine branch:", newMachine.branchId); // Debug
+
+    const response = await axios.post("http://localhost:3001/api/machines", {
+      branchId: newMachine.branchId,
+      machineType: newMachine.machineType,
+    }, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+    });
+
+    fetchMachines();
+    setShowAddModal(false);
+  } catch (error) {
+    console.error("Error adding machine:", error);
+  }
   };
 
   return (
@@ -150,7 +200,7 @@ export default function MachineManagement() {
                     {machine.id}
                   </td>
                   <td className="border border-gray-300 px-4 py-2 text-center">
-                    {machine.id}
+                    {machine.machineType}
                   </td>
                   <td className="border border-gray-300 px-4 py-2 text-center">
                     {machine.branchName}
@@ -181,6 +231,7 @@ export default function MachineManagement() {
           <MachineInputModal
             onSubmit={handleAddMachine}
             onClose={() => setShowAddModal(false)}
+            branches={branches}
           />
         </div>
       )}
@@ -213,29 +264,35 @@ export default function MachineManagement() {
 function MachineInputModal({
   onSubmit,
   onClose,
+  branches,
 }: {
   onSubmit: (data: Machine) => void;
   onClose: () => void;
+  branches: Branch[];
 }) {
-  const [machineType, setMachineType] = useState("");
-  const [machineBranch, setMachineBranch] = useState("");
+  const [machineType, setMachineType] = useState("16 kg"); // Set default value to "16 kg"
+  const [machineBranch, setMachineBranch] = useState(branches.length > 0 ? branches[0].id : "");
 
   const handleSubmit = () => {
     const uniqueMachineID = new Date().getTime().toString();
+    
+    // Check if machineType is empty, set default to "16 kg"
+    const submittedMachineType = machineType.trim() === "" ? "16 kg" : machineType.trim();
+
     onSubmit({
       id: uniqueMachineID,
-      machineType: machineType,
+      machineType: submittedMachineType,
       branchId: machineBranch,
       branchName: machineBranch,
     });
-    setMachineType("");
-    setMachineBranch("");
+    setMachineType(""); // Reset to the default value after submission
+    setMachineBranch(branches.length > 0 ? branches[0].id : "");
     onClose();
   };
 
   const handleCancel = () => {
-    setMachineType("");
-    setMachineBranch("");
+    setMachineType(""); // Reset to the default value on cancel
+    setMachineBranch(branches.length > 0 ? branches[0].id : "");
     onClose();
   };
 
@@ -263,12 +320,17 @@ function MachineInputModal({
           </label>
           <label className="block mb-2">
             Branch:
-            <input
+            <select
               className="border border-gray-300 p-2 w-full rounded"
-              type="text"
               value={machineBranch}
               onChange={(e) => setMachineBranch(e.target.value)}
-            />
+            >
+              {branches.map((branch:Branch) => (
+                <option key={branch.id} value={branch.id}>
+                  {branch.name}
+                </option>
+              ))}
+            </select>
           </label>
         </div>
         <div className="modal-footer">
