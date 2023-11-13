@@ -1,5 +1,5 @@
 
-import AdminTopBar from "@/component/AdminTopBar";
+import AdminTopBar from "@/app/component/AdminTopBar";
 export default function FeaturesLayout({
   children,
 }: {
