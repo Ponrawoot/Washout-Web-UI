@@ -399,23 +399,71 @@ function StaffInputModal({
 }
 
 
-function EditStaffModal({ staffToEdit, onSave, onClose }:
-  { staffToEdit: { EmployeeID: string, FirstName: string, LastName: string, Branch: string },
-    onSave: (employeeID: string, editedFirstName: string, editedLastName: string, editedBranch: string) => void,
-    onClose: () => void }) {
+function EditStaffModal({
+  staffToEdit,
+  onSave,
+  onClose,
+}: {
+  staffToEdit: { EmployeeID: string; FirstName: string; LastName: string; Branch: string };
+  onSave: (employeeID: string, editedFirstName: string, editedLastName: string, editedBranch: string) => void;
+  onClose: () => void;
+}) {
   const [editedFirstName, setEditedFirstName] = useState(staffToEdit.FirstName);
   const [editedLastName, setEditedLastName] = useState(staffToEdit.LastName);
   const [editedBranch, setEditedBranch] = useState(staffToEdit.Branch);
+  const [branches, setBranches] = useState<Branch[]>([]);
 
-  const handleSaveClick = () => {
-    onSave(staffToEdit.EmployeeID, editedFirstName, editedLastName, editedBranch);
-    onClose();
+  useEffect(() => {
+    const fetchBranches = async () => {
+      try {
+        const accessToken = localStorage.getItem('access_token');
+        const response = await axios.get('http://localhost:3001/api/branches', {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+
+        setBranches(response.data.branches);
+      } catch (error) {
+        console.error('Error fetching branches:', error);
+      }
+    };
+
+    fetchBranches();
+  }, []);
+
+  const handleSaveClick = async () => {
+    // Extract the branchId from the selected branch
+    const selectedBranchData = branches.find((branch) => branch.id === editedBranch);
+    const branchId = selectedBranchData ? selectedBranchData.id : '';
+
+    // Prepare the data for the PATCH request
+    const patchData = {
+      branchId: branchId,
+    };
+
+    // Make the PATCH request to update the staff data
+    try {
+      const accessToken = localStorage.getItem('access_token');
+      await axios.patch(`http://localhost:3001/api/staffs/${staffToEdit.EmployeeID}`, patchData, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      // If the PATCH request is successful, update the state and close the modal
+      onSave(staffToEdit.EmployeeID, editedFirstName, editedLastName, editedBranch);
+      onClose();
+    } catch (error) {
+      console.error('Error updating staff data:', error);
+      // Handle errors, e.g., show an error message to the user
+    }
   };
 
   const handleCancel = () => {
     onClose();
   };
-
+  
   return (
     <div className="modal fixed inset-0 flex items-center justify-center z-50">
       <div className="modal-content bg-white p-4 w-1/3 rounded-lg shadow-md">
@@ -431,8 +479,8 @@ function EditStaffModal({ staffToEdit, onSave, onClose }:
             <input
               className="border border-gray-300 p-2 w-full rounded"
               type="text"
-              value={editedFirstName}
-              onChange={(e) => setEditedFirstName(e.target.value)}
+              value={staffToEdit.FirstName}
+              readOnly
             />
           </label>
           <label className="block mb-2">
@@ -440,18 +488,26 @@ function EditStaffModal({ staffToEdit, onSave, onClose }:
             <input
               className="border border-gray-300 p-2 w-full rounded"
               type="text"
-              value={editedLastName}
-              onChange={(e) => setEditedLastName(e.target.value)}
+              value={staffToEdit.LastName}
+              readOnly
             />
           </label>
           <label className="block mb-2">
-            ประจำที่สาขา:
-            <input
+            แก้ไขประจำที่สาขา:
+            <select
               className="border border-gray-300 p-2 w-full rounded"
-              type="text"
               value={editedBranch}
               onChange={(e) => setEditedBranch(e.target.value)}
-            />
+            >
+              <option value="" disabled>
+                เลือกสาขา
+              </option>
+              {branches.map((branch: Branch) => (
+                <option key={branch.id} value={branch.id}>
+                  {branch.name}
+                </option>
+              ))}
+            </select>
           </label>
         </div>
         <div className="modal-footer">
