@@ -17,14 +17,11 @@ export default function Home() {
       const response = await axios.post('http://localhost:3001/api/login', {
         username,
         password,
+        
       });
 
-      // Assuming the API response structure matches the expected format
       const { access_token, user } = response.data;
-
       // Store access token and role in some global state or localStorage
-      // You can use a state management library like Redux or Context API for this purpose
-      // For simplicity, using localStorage in this example
       localStorage.setItem('access_token', access_token);
       localStorage.setItem('role', user.role);
 
@@ -32,6 +29,7 @@ export default function Home() {
       if (user.role === 'admin') {
         router.push('/branch');
       } else {
+        localStorage.setItem('staff_branch', user.branchId);
         router.push('/locker');
       }
     } catch (error) {

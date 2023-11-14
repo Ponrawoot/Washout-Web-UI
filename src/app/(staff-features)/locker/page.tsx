@@ -1,62 +1,101 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
+interface LocalLocker {
+  id: string;
+  Status: string;
+  orderId: string;
+}
+
+interface ApiLocker {
+  id: string;
+  branchId: string;
+  orderId: string;
+}
 
 export default function LockerManagement() {
-  const [locker, setLocker] = useState([
-    { LockerID: "1", Status: "ว่าง", UID: "-" },
-    {
-      LockerID: "2",
-      Status: "กำลังใช้งาน",
-      UID: "f09bc70e-5f88-428a-938d-eb4ac0fad712",
-    },
-    { LockerID: "3", Status: "ว่าง", UID: "-" },
-  ]);
-
-  const [showAddModal, setShowAddModal] = useState(false);
+  const [locker, setLocker] = useState<LocalLocker[]>([]);
   const [showTransferToModal, setShowTransferToModal] = useState(false);
   const [showFreeModal, setShowFreeModal] = useState(false);
-  const [lockerToTransfer, setLockerToTransfer] = useState({
-    LockerID: "",
+  const [lockerToTransfer, setLockerToTransfer] = useState<LocalLocker>({
+    id: "",
     Status: "",
-    UID: "",
+    orderId: "",
   });
-  const [lockerToFree, setLockerToFree] = useState({
-    LockerID: "",
+  const [lockerToFree, setLockerToFree] = useState<LocalLocker>({
+    id: "",
     Status: "",
-    UID: "",
+    orderId: "",
   });
 
-  const [searchQuery, setSearchQuery] = useState("");
+  useEffect(() => {
+    const fetchLockerData = async () => {
+      try {
+        const branchId = localStorage.getItem('staff_branch');
+        const accessToken = localStorage.getItem('access_token');
 
+        if (branchId && accessToken) {
+          const response = await fetch(
+            `http://localhost:3001/api/lockers/${branchId}`,
+            {
+              method: "GET",
+              headers: {
+                Authorization: `Bearer ${accessToken}`,
+              },
+            }
+          );
+
+          if (response.ok) {
+            console.log("Fetch locker data successfully");
+            const data = await response.json();
+            const lockersFromApi: LocalLocker[] = data.lockers.map(
+              (apiLocker: ApiLocker) => ({
+                id: apiLocker.id,
+                Status:
+                  apiLocker.orderId === "no order" ? "ว่าง" : "กำลังใช้งาน",
+                orderId: apiLocker.orderId,
+              })
+            );
+            setLocker(lockersFromApi);
+          } else {
+            console.error("Failed to fetch locker data");
+          }
+        } else {
+          console.error(
+            "Branch ID or access token not found in local storage"
+          );
+        }
+      } catch (error) {
+        console.error("Error fetching locker data:", error);
+      }
+    };
+
+    fetchLockerData();
+  }, []);
 
   const handleModifiedLocker = (
     ID: string,
     editedStatus: string,
     editedUID: string
   ) => {
-    const updatedLocker = locker.map((specificLocker: {LockerID:string, Status:string, UID:string}) => {
-      if (specificLocker.LockerID === ID) {
-        return { ...specificLocker, Status: editedStatus, UID: editedUID };
+    const updatedLocker = locker.map((specificLocker: LocalLocker) => {
+      if (specificLocker.id === ID) {
+        return { ...specificLocker, Status: editedStatus, orderId: editedUID };
       }
       return specificLocker;
     });
     setLocker(updatedLocker);
   };
 
-  const handleTransferClick = (locker: {LockerID:string, Status:string, UID:string}) => {
+  const handleTransferClick = (locker: LocalLocker) => {
     setLockerToTransfer(locker);
     setShowTransferToModal(true);
   };
 
-  const handleFreeClick = (locker: {LockerID:string, Status:string, UID:string}) => {
+  const handleFreeClick = (locker: LocalLocker) => {
     setLockerToFree(locker);
     setShowFreeModal(true);
   };
-
-  // const handleAddMachine = (newMachine: { MachineID: string, MachineType: string, Branch: string}) => {
-  //   setMachine([...machine, newMachine]);
-  //   setShowAddModal(false);
-  // };
 
   return (
     <main className="bg-white">
@@ -67,22 +106,22 @@ export default function LockerManagement() {
             <tr className="bg-gray-200">
               <th className="border border-gray-300 px-4 py-2">หมายเลข</th>
               <th className="border border-gray-300 px-4 py-2 w-2/5">สถานะ</th>
-              <th className="border border-gray-300 px-4 py-2">UID</th>
+              <th className="border border-gray-300 px-4 py-2">Order ID</th>
               <th className="border border-gray-300 px-4 py-2"></th>
               <th className="border border-gray-300 px-4 py-2"></th>
             </tr>
           </thead>
           <tbody>
             {locker.map((locker) => (
-              <tr key={locker.LockerID} className="border border-gray-300">
+              <tr key={locker.id} className="border border-gray-300">
                 <td className="border border-gray-300 px-4 py-2 text-center">
-                  {locker.LockerID}
+                  {locker.id}
                 </td>
                 <td className="border border-gray-300 px-4 py-2 text-center">
                   {locker.Status}
                 </td>
                 <td className="border border-gray-300 px-4 py-2 text-center">
-                  {locker.UID}
+                  {locker.orderId}
                 </td>
                 <td className="border border-gray-300 px-4 py-2 text-center">
                   <button
@@ -96,7 +135,6 @@ export default function LockerManagement() {
                   >
                     ย้ายผ้า
                   </button>
-                  
                 </td>
                 <td className="border border-gray-300 px-4 py-2 text-center">
                   <button
@@ -118,39 +156,42 @@ export default function LockerManagement() {
       </div>
       {showTransferToModal && (
         <div className="fixed inset-0 flex items-center justify-center z-10 bg-black bg-opacity-50">
-        <TransferToLockerModal
-          locker={lockerToTransfer}
-          onSave={() => {
-            handleModifiedLocker(lockerToTransfer.LockerID,"กำลังใช้งาน","f09bc70e-5f88-428a-938d-eb4ac0fad712")
-          }}
-          onClose={() => setShowTransferToModal(false)}
-        />
+          <TransferToLockerModal
+            locker={lockerToTransfer}
+            onSave={() => {
+              handleModifiedLocker(
+                lockerToTransfer.id,
+                "กำลังใช้งาน",
+                "f09bc70e-5f88-428a-938d-eb4ac0fad712"
+              );
+            }}
+            onClose={() => setShowTransferToModal(false)}
+          />
         </div>
       )}
       {showFreeModal && (
         <div className="fixed inset-0 flex items-center justify-center z-10 bg-black bg-opacity-50">
-        <FreeLockerModal
-          locker={lockerToFree}
-          onSave={() => {
-            handleModifiedLocker(lockerToFree.LockerID,"ว่าง","-")
-            setShowFreeModal(false);
-          }}
-          onClose={() => setShowFreeModal(false)}
-        />
+          <FreeLockerModal
+            locker={lockerToFree}
+            onSave={() => {
+              handleModifiedLocker(lockerToFree.id, "ว่าง", "no order");
+              setShowFreeModal(false);
+            }}
+            onClose={() => setShowFreeModal(false)}
+          />
         </div>
       )}
     </main>
   );
 }
 
-
 function TransferToLockerModal({
   locker,
   onSave,
   onClose,
 }: {
-  locker: { LockerID: string; Status: string; UID: string };
-  onSave: (LockerID: string, Status: string, UID: string) => void;
+  locker: LocalLocker;
+  onSave: (id: string, Status: string, orderId: string) => void;
   onClose: () => void;
 }) {
   return (
@@ -164,13 +205,13 @@ function TransferToLockerModal({
         </div>
         <div className="modal-body">
           <p>หมายเลขเครื่องซักผ้า</p>
-          <p className="font-semibold">หมายเลขตู้เก็บผ้า {locker.LockerID}</p>
+          <p className="font-semibold">หมายเลขตู้เก็บผ้า {locker.id}</p>
         </div>
         <div className="modal-footer">
           <button
             className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-700"
             onClick={() => {
-              onSave(locker.LockerID,locker.Status,locker.UID);
+              onSave(locker.id, locker.Status, locker.orderId);
               onClose();
             }}
           >
@@ -193,8 +234,8 @@ function FreeLockerModal({
   onSave,
   onClose,
 }: {
-  locker: { LockerID: string; Status: string; UID: string };
-  onSave: (LockerID: string, Status: string, UID: string) => void;
+  locker: LocalLocker;
+  onSave: (id: string, Status: string, orderId: string) => void;
   onClose: () => void;
 }) {
   return (
@@ -208,13 +249,13 @@ function FreeLockerModal({
         </div>
         <div className="modal-body">
           <p>กรุณาตรวจสอบ uid ก่อนทำการคืนผ้า</p>
-          <p className="font-semibold">{locker.UID}</p>
+          <p className="font-semibold">{locker.orderId}</p>
         </div>
         <div className="modal-footer">
           <button
             className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-700"
             onClick={() => {
-              onSave(locker.LockerID,locker.Status,locker.UID);
+              onSave(locker.id, locker.Status, locker.orderId);
               onClose();
             }}
           >
