@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import axios from "axios";
 
 interface LocalLocker {
   id: string;
@@ -13,8 +14,19 @@ interface ApiLocker {
   orderId: string;
 }
 
+interface Machine {
+  id: string;
+  branchId: string;
+  status: string;
+  machineType: string;
+  isOpen: boolean;
+  remainingTime: number;
+  currentOrder: string;
+}
+
 export default function LockerManagement() {
   const [locker, setLocker] = useState<LocalLocker[]>([]);
+  const [machines, setMachines] = useState<Machine[]>([]);
   const [showTransferToModal, setShowTransferToModal] = useState(false);
   const [showFreeModal, setShowFreeModal] = useState(false);
   const [lockerToTransfer, setLockerToTransfer] = useState<LocalLocker>({
@@ -34,24 +46,21 @@ export default function LockerManagement() {
       const accessToken = localStorage.getItem('access_token');
 
       if (branchId && accessToken) {
-        const response = await fetch(
+        const response = await axios.get(
           `http://localhost:3001/api/lockers/${branchId}`,
           {
-            method: "GET",
             headers: {
               Authorization: `Bearer ${accessToken}`,
             },
           }
         );
 
-        if (response.ok) {
+        if (response.status === 200) {
           console.log("Fetch locker data successfully");
-          const data = await response.json();
-          const lockersFromApi: LocalLocker[] = data.lockers.map(
+          const lockersFromApi: LocalLocker[] = response.data.lockers.map(
             (apiLocker: ApiLocker) => ({
               id: apiLocker.id,
-              Status:
-                apiLocker.orderId === "no order" ? "ว่าง" : "กำลังใช้งาน",
+              Status: apiLocker.orderId === "no order" ? "ว่าง" : "กำลังใช้งาน",
               orderId: apiLocker.orderId,
             })
           );
@@ -60,17 +69,78 @@ export default function LockerManagement() {
           console.error("Failed to fetch locker data");
         }
       } else {
-        console.error(
-          "Branch ID or access token not found in local storage"
-        );
+        console.error("Branch ID or access token not found in local storage");
       }
     } catch (error) {
       console.error("Error fetching locker data:", error);
     }
   };
 
+  const updateLocker = async (lockerId: string, machineId: string) => {
+    try {
+      const branchId = localStorage.getItem("staff_branch");
+      const accessToken = localStorage.getItem("access_token");
+
+      if (branchId && accessToken) {
+        const response = await axios.put(
+          `http://localhost:3001/api/lockers/moveClothe`,
+          {
+            machineId: machineId,
+            lockerId: lockerId,
+          },
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${accessToken}`,
+            },
+          }
+        );
+
+        if (response.status === 200) {
+          console.log("Locker updated successfully");
+        } else {
+          console.error("Failed to update locker");
+        }
+      } else {
+        console.error("Branch ID or access token not found in local storage");
+      }
+    } catch (error) {
+      console.error("Error updating locker:", error);
+    }
+  };
+
+  const fetchMachines = async () => {
+    try {
+      const branchId = localStorage.getItem('staff_branch');
+      const accessToken = localStorage.getItem('access_token');
+
+      if (branchId && accessToken) {
+        const response = await axios.get(
+          `http://localhost:3001/api/machines/finished/${branchId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          }
+        );
+
+        if (response.status === 200) {
+          console.log("Fetch machines data successfully");
+          setMachines(response.data.machines);
+        } else {
+          console.error("Failed to fetch machines data");
+        }
+      } else {
+        console.error("Branch ID or access token not found in local storage");
+      }
+    } catch (error) {
+      console.error("Error fetching machines data:", error);
+    }
+  };
+
   useEffect(() => {
     fetchLockerData();
+    fetchMachines(); // Fetch machines data
   }, []);
 
   const handleFreeClick = (locker: LocalLocker) => {
@@ -90,13 +160,14 @@ export default function LockerManagement() {
       return specificLocker;
     });
     setLocker(updatedLocker);
+    fetchLockerData();
   };
+  
 
   const handleTransferClick = (locker: LocalLocker) => {
     setLockerToTransfer(locker);
     setShowTransferToModal(true);
   };
-
 
   return (
     <main className="bg-white">
@@ -164,12 +235,10 @@ export default function LockerManagement() {
         <div className="fixed inset-0 flex items-center justify-center z-10 bg-black bg-opacity-50">
           <TransferToLockerModal
             locker={lockerToTransfer}
-            onSave={() => {
-              handleModifiedLocker(
-                lockerToTransfer.id,
-                "กำลังใช้งาน",
-                "f09bc70e-5f88-428a-938d-eb4ac0fad712"
-              );
+            machines={machines}
+            onSave={(id, Status, orderId, machineId) => {
+              handleModifiedLocker(id, Status, orderId);
+              updateLocker(id, machineId);
             }}
             onClose={() => setShowTransferToModal(false)}
           />
@@ -193,13 +262,24 @@ export default function LockerManagement() {
 
 function TransferToLockerModal({
   locker,
+  machines,
   onSave,
   onClose,
 }: {
   locker: LocalLocker;
-  onSave: (id: string, Status: string, orderId: string) => void;
+  machines: Machine[];
+  onSave: (id: string, Status: string, orderId: string, machineId: string) => void;
   onClose: () => void;
 }) {
+  const [selectedOrderId, setSelectedOrderId] = useState('');
+
+  const handleConfirm = () => {
+    const updatedOrderId = selectedOrderId;
+    onSave(locker.id, locker.Status, updatedOrderId, selectedOrderId);
+    onClose();
+  };
+  
+
   return (
     <div className="modal fixed inset-0 flex items-center justify-center z-50">
       <div className="modal-content bg-white p-4 w-1/3 rounded-lg shadow-md">
@@ -211,15 +291,27 @@ function TransferToLockerModal({
         </div>
         <div className="modal-body">
           <p>หมายเลขเครื่องซักผ้า</p>
+          <select
+            value={selectedOrderId}
+            onChange={(e) => setSelectedOrderId(e.target.value)}
+            className="border p-2 mb-2"
+          >
+            <option value="">เลือกเครื่องที่ซักเสร็จ</option>
+            {machines.map((machine) => (
+              <option key={machine.currentOrder} value={machine.currentOrder}>
+                {machine.id} - {machine.machineType}
+              </option>
+            ))}
+          </select>
           <p className="font-semibold">หมายเลขตู้เก็บผ้า {locker.id}</p>
         </div>
         <div className="modal-footer">
           <button
-            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-700"
-            onClick={() => {
-              onSave(locker.id, locker.Status, locker.orderId);
-              onClose();
-            }}
+            className={`${
+              !selectedOrderId ? 'bg-gray-300 text-black' : 'bg-red-500 text-white'
+            } px-4 py-2 rounded hover:bg-red-700`}
+            onClick={handleConfirm}
+            disabled={!selectedOrderId}
           >
             ยืนยัน
           </button>
@@ -241,7 +333,7 @@ function FreeLockerModal({
   onClose,
 }: {
   locker: LocalLocker;
-  onSave: () => void; // Updated onSave to take no arguments
+  onSave: () => void;
   onClose: () => void;
 }) {
   const handleConfirm = async () => {
@@ -250,24 +342,24 @@ function FreeLockerModal({
       const accessToken = localStorage.getItem("access_token");
 
       if (branchId && accessToken) {
-        const response = await fetch(
+        const response = await axios.patch(
           `http://localhost:3001/api/lockers/${locker.id}`,
           {
-            method: "PATCH",
+            branchId: branchId,
+            orderId: "no order",
+          },
+          {
             headers: {
               "Content-Type": "application/json",
               Authorization: `Bearer ${accessToken}`,
             },
-            body: JSON.stringify({
-              branchId: branchId,
-              orderId: "no order",
-            }),
           }
         );
 
-        if (response.ok) {
+        if (response.status === 200) {
           console.log("Locker returned successfully");
-          onSave(); // Notify the parent component that the locker has been returned
+          onSave();
+          onClose();
         } else {
           console.error("Failed to return locker");
         }
@@ -278,6 +370,7 @@ function FreeLockerModal({
       console.error("Error returning locker:", error);
     }
   };
+
   return (
     <div className="modal fixed inset-0 flex items-center justify-center z-50">
       <div className="modal-content bg-white p-4 w-1/3 rounded-lg shadow-md">
