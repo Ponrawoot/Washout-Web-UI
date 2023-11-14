@@ -28,50 +28,89 @@ export default function LockerManagement() {
     orderId: "",
   });
 
-  useEffect(() => {
-    const fetchLockerData = async () => {
-      try {
-        const branchId = localStorage.getItem('staff_branch');
-        const accessToken = localStorage.getItem('access_token');
+  const fetchLockerData = async () => {
+    try {
+      const branchId = localStorage.getItem('staff_branch');
+      const accessToken = localStorage.getItem('access_token');
 
-        if (branchId && accessToken) {
-          const response = await fetch(
-            `http://localhost:3001/api/lockers/${branchId}`,
-            {
-              method: "GET",
-              headers: {
-                Authorization: `Bearer ${accessToken}`,
-              },
-            }
-          );
-
-          if (response.ok) {
-            console.log("Fetch locker data successfully");
-            const data = await response.json();
-            const lockersFromApi: LocalLocker[] = data.lockers.map(
-              (apiLocker: ApiLocker) => ({
-                id: apiLocker.id,
-                Status:
-                  apiLocker.orderId === "no order" ? "ว่าง" : "กำลังใช้งาน",
-                orderId: apiLocker.orderId,
-              })
-            );
-            setLocker(lockersFromApi);
-          } else {
-            console.error("Failed to fetch locker data");
+      if (branchId && accessToken) {
+        const response = await fetch(
+          `http://localhost:3001/api/lockers/${branchId}`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
           }
-        } else {
-          console.error(
-            "Branch ID or access token not found in local storage"
-          );
-        }
-      } catch (error) {
-        console.error("Error fetching locker data:", error);
-      }
-    };
+        );
 
+        if (response.ok) {
+          console.log("Fetch locker data successfully");
+          const data = await response.json();
+          const lockersFromApi: LocalLocker[] = data.lockers.map(
+            (apiLocker: ApiLocker) => ({
+              id: apiLocker.id,
+              Status:
+                apiLocker.orderId === "no order" ? "ว่าง" : "กำลังใช้งาน",
+              orderId: apiLocker.orderId,
+            })
+          );
+          setLocker(lockersFromApi);
+        } else {
+          console.error("Failed to fetch locker data");
+        }
+      } else {
+        console.error(
+          "Branch ID or access token not found in local storage"
+        );
+      }
+    } catch (error) {
+      console.error("Error fetching locker data:", error);
+    }
+  };
+
+  useEffect(() => {
     fetchLockerData();
   }, []);
+
+  const handleFreeClick = async (locker: LocalLocker) => {
+    try {
+      const branchId = localStorage.getItem("staff_branch");
+      const accessToken = localStorage.getItem("access_token");
+
+      if (branchId && accessToken) {
+        const response = await fetch(
+          `http://localhost:3001/api/lockers/${locker.id}`,
+          {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${accessToken}`,
+            },
+            body: JSON.stringify({
+              branchId: branchId,
+              orderId: "no order",
+            }),
+          }
+        );
+
+        if (response.ok) {
+          console.log("Locker returned successfully");
+          // Update local state to reflect the returned locker
+          fetchLockerData(); // Fetch locker data after returning a locker
+          setShowFreeModal(false);
+        } else {
+          console.error("Failed to return locker");
+        }
+      } else {
+        console.error(
+          "Branch ID or access token not found in local storage"
+        );
+      }
+    } catch (error) {
+      console.error("Error returning locker:", error);
+    }
+  };
 
   const handleModifiedLocker = (
     ID: string,
@@ -92,10 +131,6 @@ export default function LockerManagement() {
     setShowTransferToModal(true);
   };
 
-  const handleFreeClick = (locker: LocalLocker) => {
-    setLockerToFree(locker);
-    setShowFreeModal(true);
-  };
 
   return (
     <main className="bg-white">
