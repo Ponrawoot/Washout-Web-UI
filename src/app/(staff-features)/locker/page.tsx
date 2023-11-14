@@ -73,43 +73,9 @@ export default function LockerManagement() {
     fetchLockerData();
   }, []);
 
-  const handleFreeClick = async (locker: LocalLocker) => {
-    try {
-      const branchId = localStorage.getItem("staff_branch");
-      const accessToken = localStorage.getItem("access_token");
-
-      if (branchId && accessToken) {
-        const response = await fetch(
-          `http://localhost:3001/api/lockers/${locker.id}`,
-          {
-            method: "PATCH",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${accessToken}`,
-            },
-            body: JSON.stringify({
-              branchId: branchId,
-              orderId: "no order",
-            }),
-          }
-        );
-
-        if (response.ok) {
-          console.log("Locker returned successfully");
-          // Update local state to reflect the returned locker
-          fetchLockerData(); // Fetch locker data after returning a locker
-          setShowFreeModal(false);
-        } else {
-          console.error("Failed to return locker");
-        }
-      } else {
-        console.error(
-          "Branch ID or access token not found in local storage"
-        );
-      }
-    } catch (error) {
-      console.error("Error returning locker:", error);
-    }
+  const handleFreeClick = (locker: LocalLocker) => {
+    setLockerToFree(locker);
+    setShowFreeModal(true);
   };
 
   const handleModifiedLocker = (
@@ -140,8 +106,8 @@ export default function LockerManagement() {
           <thead>
             <tr className="bg-gray-200">
               <th className="border border-gray-300 px-4 py-2">หมายเลข</th>
-              <th className="border border-gray-300 px-4 py-2 w-2/5">สถานะ</th>
-              <th className="border border-gray-300 px-4 py-2">Order ID</th>
+              <th className="border border-gray-300 px-4 py-2 w-1/4">สถานะ</th>
+              <th className="border border-gray-300 px-6 py-2">Order ID</th> {/* Adjusted width */}
               <th className="border border-gray-300 px-4 py-2"></th>
               <th className="border border-gray-300 px-4 py-2"></th>
             </tr>
@@ -152,10 +118,15 @@ export default function LockerManagement() {
                 <td className="border border-gray-300 px-4 py-2 text-center">
                   {locker.id}
                 </td>
-                <td className="border border-gray-300 px-4 py-2 text-center">
+                <td className="border border-gray-300 px-3 py-2 text-center"> {/* Adjusted width */}
+                  <div
+                    className={`w-4 h-4 rounded-full inline-block mr-2 ${
+                      locker.Status === "ว่าง" ? "bg-green-500" : "bg-red-500"
+                    }`}
+                  ></div>
                   {locker.Status}
                 </td>
-                <td className="border border-gray-300 px-4 py-2 text-center">
+                <td className="border border-gray-300 px-6 py-2 text-center"> {/* Adjusted width */}
                   {locker.orderId}
                 </td>
                 <td className="border border-gray-300 px-4 py-2 text-center">
@@ -270,9 +241,43 @@ function FreeLockerModal({
   onClose,
 }: {
   locker: LocalLocker;
-  onSave: (id: string, Status: string, orderId: string) => void;
+  onSave: () => void; // Updated onSave to take no arguments
   onClose: () => void;
 }) {
+  const handleConfirm = async () => {
+    try {
+      const branchId = localStorage.getItem("staff_branch");
+      const accessToken = localStorage.getItem("access_token");
+
+      if (branchId && accessToken) {
+        const response = await fetch(
+          `http://localhost:3001/api/lockers/${locker.id}`,
+          {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${accessToken}`,
+            },
+            body: JSON.stringify({
+              branchId: branchId,
+              orderId: "no order",
+            }),
+          }
+        );
+
+        if (response.ok) {
+          console.log("Locker returned successfully");
+          onSave(); // Notify the parent component that the locker has been returned
+        } else {
+          console.error("Failed to return locker");
+        }
+      } else {
+        console.error("Branch ID or access token not found in local storage");
+      }
+    } catch (error) {
+      console.error("Error returning locker:", error);
+    }
+  };
   return (
     <div className="modal fixed inset-0 flex items-center justify-center z-50">
       <div className="modal-content bg-white p-4 w-1/3 rounded-lg shadow-md">
@@ -290,7 +295,7 @@ function FreeLockerModal({
           <button
             className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-700"
             onClick={() => {
-              onSave(locker.id, locker.Status, locker.orderId);
+              handleConfirm();
               onClose();
             }}
           >
