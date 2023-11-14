@@ -12,11 +12,10 @@ export default function AdminTopBar() {
   const [isMachinePage, setIsMachinePage] = useState(false);
 
   useEffect(() => {
-    // Update states on the client side after the initial render
     setIsBranchPage(window.location.pathname === '/branch');
     setIsStaffPage(window.location.pathname === '/staff');
     setIsMachinePage(window.location.pathname === '/machine');
-  }, []); // Empty dependency array ensures this runs only once after the initial render on the client side
+  }, []); 
 
   const handleBranchIconClick = () => {
     setIsBranchPage(true);
@@ -59,10 +58,13 @@ export default function AdminTopBar() {
           </div>
           <ul className="flex space-x-4 items-center">
             <li>
-              <p>ผู้ดูแลระบบ</p>
+              <p>Admin</p>
             </li>
             <li>
-              <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center"></div>
+              <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
+
+                <p className="text-black">A</p>
+              </div>
             </li>
             <li>
               <button onClick={() => router.replace("/login")}>Log Out</button>

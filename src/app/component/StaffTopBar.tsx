@@ -1,28 +1,40 @@
 "use client";
 import { useRouter } from "next/navigation";
 export default function StaffTopBar() {
-  const router = useRouter();
+  function getProfileInitials(name:string) {
+    return name.charAt(0).toUpperCase();
+  }
+
+  function topBar(staffName:string) {
+    const profileInitials = getProfileInitials(staffName);
+
     return (
       <nav className="bg-primary-blue p-4">
         <div className="container mx-auto">
           <div className="flex justify-between items-center">
-              <div className="text-black text-xl">
-                  <p>สาขา สี่พระยา</p>
-              </div>
+            <div className="text-black text-xl">
+              <p>สาขา สี่พระยา</p>
+            </div>
             <ul className="flex space-x-4 items-center">
-            <li>
-                <p>Staff01</p>
-              </li>
-            <li>
-                  <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-                  </div>
+              <li>
+                <p>{staffName}</p>
               </li>
               <li>
-          <button onClick={() =>router.replace("/login")}>Log Out</button>
-            </li>
+                <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
+                  {/* Display the first alphabet of staffName as profile picture */}
+                  <p className="text-black">{profileInitials}</p>
+                </div>
+              </li>
+              <li>
+                <button onClick={() => router.replace("/login")}>Log Out</button>
+              </li>
             </ul>
           </div>
         </div>
       </nav>
     );
-  };
+  }
+
+  const router = useRouter();
+  return topBar("Staff");
+}
